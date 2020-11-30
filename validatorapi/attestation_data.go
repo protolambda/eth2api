@@ -1,0 +1,18 @@
+package validatorapi
+
+import (
+	"context"
+	"github.com/protolambda/eth2api"
+	"github.com/protolambda/zrnt/eth2/beacon"
+)
+
+// Requests that the beacon node produce an AttestationData.
+func AttestationData(ctx context.Context, cli eth2api.Client,
+	slot beacon.Slot, committeeIndex beacon.CommitteeIndex,
+	dest *beacon.AttestationData) error {
+	q := eth2api.Query{
+		"slot":            slot,
+		"committee_index": committeeIndex,
+	}
+	return eth2api.MinimalRequest(ctx, cli, eth2api.QueryGET(q, "eth/v1/validator/attestation_data"), dest)
+}

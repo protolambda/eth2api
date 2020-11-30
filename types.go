@@ -38,6 +38,39 @@ type SyncingStatus struct {
 	SyncDistance beacon.Slot `json:"sync_distance"`
 }
 
+// Wrapper around the original ProposerDuty response
+type DependentProposerDuty struct {
+	// Duties are valid only on the chain with this given block root
+	DependentRoot beacon.Root    `json:"dependent_root"`
+	Data          []ProposerDuty `json:"data"`
+}
+
+type ProposerDuty struct {
+	// TODO
+}
+
+// Wrapper around the original AttesterDuty response
+type DependentAttesterDuties struct {
+	// Duties are valid only on the chain with this given block root
+	DependentRoot beacon.Root    `json:"dependent_root"`
+	Data          []AttesterDuty `json:"data"`
+}
+
+type AttesterDuty struct {
+	// TODO
+}
+
+type BeaconCommitteeSubscribeSignal struct {
+	ValidatorIndex beacon.ValidatorIndex `json:"validator_index"`
+	CommitteeIndex beacon.CommitteeIndex `json:"committee_index"`
+	// Number of committees at the returned slot
+	CommitteesAtSlot view.Uint64View `json:"committees_at_slot"`
+	// Should be slot at which validator is assigned to attest
+	Slot beacon.Slot `json:"slot"`
+	// Signals to BN that a validator on the VC has been chosen for aggregator role.
+	IsAggregator view.BoolView `json:"is_aggregator"`
+}
+
 type NodeVersionResponse struct {
 	Version string `json:"version"`
 }
