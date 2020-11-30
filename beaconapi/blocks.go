@@ -22,8 +22,6 @@ func Block(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, des
 // The beacon node is expected to integrate the new block into its state, and therefore validate the block internally,
 // however blocks which fail the validation are still broadcast but a different status code is returned
 // (202, `valid` will be false)
-//
-// Requires validator API on server.
 func PublishBlock(ctx context.Context, cli eth2api.Client, block *beacon.SignedBeaconBlock) (valid bool, err error) {
 	req := eth2api.BodyPOST("eth/v1/beacon/blocks", block)
 	resp := cli.Request(ctx, req)

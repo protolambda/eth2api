@@ -12,6 +12,12 @@ type GenesisResponse struct {
 	GenesisForkVersion    beacon.Version   `json:"genesis_fork_version"`
 }
 
+type FinalityCheckpoints struct {
+	PreviousJustified beacon.Checkpoint `json:"previous_justified"`
+	CurrentJustified  beacon.Checkpoint `json:"current_justified"`
+	Finalized         beacon.Checkpoint `json:"finalized"`
+}
+
 type ValidatorResponse struct {
 	// Index of validator in validator registry.
 	Index beacon.ValidatorIndex `json:"index"`

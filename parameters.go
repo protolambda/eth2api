@@ -5,6 +5,22 @@ import (
 	"strconv"
 )
 
+type ValidatorId interface {
+	ValidatorId() string
+}
+
+type ValidatorIdPubkey beacon.BLSPubkey
+
+func (v ValidatorIdPubkey) ValidatorId() string {
+	return beacon.BLSPubkey(v).String()
+}
+
+type ValidatorIdIndex beacon.ValidatorIndex
+
+func (v ValidatorIdIndex) ValidatorId() string {
+	return strconv.FormatUint(uint64(v), 10)
+}
+
 type StateId interface {
 	StateId() string
 }

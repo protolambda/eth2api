@@ -27,8 +27,6 @@ func PoolAttestations(ctx context.Context, cli eth2api.Client, slot *beacon.Slot
 //
 // If one or more attestations fail validation the node MUST return a 400 error with details of which attestations have failed, and why.
 // In that case, a non-nil list of errors will be returned, with entries pointing to original array indices of input attestations
-//
-// Requires validator API on server.
 func SubmitAttestations(ctx context.Context, cli eth2api.Client, attestations []beacon.Attestation) (failures []eth2api.IndexedErrorMessageItem, err error) {
 	resp := cli.Request(ctx, eth2api.BodyPOST("eth/v1/beacon/pool/attestations", attestations))
 	if err := resp.Err(); err != nil {
