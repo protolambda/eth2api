@@ -137,3 +137,12 @@ type IndexedErrorMessage struct {
 	// List of individual items that have failed
 	Failures []IndexedErrorMessageItem `json:"failures"`
 }
+
+func (m *IndexedErrorMessage) IndexedErrors() []IndexedErrorMessageItem {
+	return m.Failures
+}
+
+// Optional error enhancement, applicable for API methods that can have a partial success.
+type IndexedError interface {
+	IndexedErrors() []IndexedErrorMessageItem
+}

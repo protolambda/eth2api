@@ -8,7 +8,6 @@ Fully typed API bindings, for both client and server, to implement [the standard
 
 - Stricter typing, bazed on [ZRNT](https://github.com/protolambda/zrnt)
 - Full transport abstraction, no protobufs, implement it how you like
-- No encoding/decoding roundtrips in case of running both server and client. 
 - Focus on full JSON compatibility with Lighthouse and Teku
 - Avoids allocations, optimized requests
 - Minimal dependencies

@@ -22,6 +22,8 @@ func Block(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, des
 // The beacon node is expected to integrate the new block into its state, and therefore validate the block internally,
 // however blocks which fail the validation are still broadcast but a different status code is returned
 // (202, `valid` will be false)
+//
+// Requires validator API on server.
 func PublishBlock(ctx context.Context, cli eth2api.Client, block *beacon.SignedBeaconBlock) (valid bool, err error) {
 	req := eth2api.BodyPOST("eth/v1/beacon/blocks", block)
 	resp := cli.Request(ctx, req)
@@ -44,7 +46,7 @@ func BlockHeader(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockI
 }
 
 // Retrieves block headers matching given query. By default it will fetch current head slot blocks.
-func BlockHeaders(ctx context.Context, cli eth2api.Client, slot *beacon.Slot, parentRoot *beacon.Root, dest *beacon.SignedBeaconBlockHeader) (exists bool, err error) {
+func BlockHeaders(ctx context.Context, cli eth2api.Client, slot *beacon.Slot, parentRoot *beacon.Root, dest *[]beacon.SignedBeaconBlockHeader) (exists bool, err error) {
 	var q eth2api.Query
 	if slot != nil {
 		if parentRoot != nil {

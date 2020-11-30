@@ -121,3 +121,14 @@ func SimpleRequest(ctx context.Context, cli Client, req Request, dest interface{
 	}
 	return
 }
+
+func MinimalRequest(ctx context.Context, cli Client, req Request, dest interface{}) (err error) {
+	resp := cli.Request(ctx, req)
+	if err := resp.Err(); err != nil {
+		return err
+	}
+	if dest != nil {
+		err = resp.Decode(dest)
+	}
+	return
+}
