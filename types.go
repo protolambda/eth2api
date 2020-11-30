@@ -20,6 +20,11 @@ type DepositContractResponse struct {
 	Address beacon.Eth1Address `json:"address"`
 }
 
+type ChainHead struct {
+	Root beacon.Root `json:"root"`
+	Slot beacon.Slot `json:"slot"`
+}
+
 type FinalityCheckpoints struct {
 	PreviousJustified beacon.Checkpoint `json:"previous_justified"`
 	CurrentJustified  beacon.Checkpoint `json:"current_justified"`
