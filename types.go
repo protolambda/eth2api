@@ -3,6 +3,7 @@ package eth2api
 import (
 	"fmt"
 	"github.com/protolambda/zrnt/eth2/beacon"
+	"github.com/protolambda/ztyp/view"
 	"strings"
 )
 
@@ -10,6 +11,13 @@ type GenesisResponse struct {
 	GenesisTime           beacon.Timestamp `json:"genesis_time"`
 	GenesisValidatorsRoot beacon.Root      `json:"genesis_validators_root"`
 	GenesisForkVersion    beacon.Version   `json:"genesis_fork_version"`
+}
+
+type DepositContractResponse struct {
+	// Id of Eth1 chain on which contract is deployed.
+	ChainID view.Uint64View `json:"chain_id"`
+	// Hex encoded deposit contract address with 0x prefix
+	Address beacon.Eth1Address `json:"address"`
 }
 
 type FinalityCheckpoints struct {
