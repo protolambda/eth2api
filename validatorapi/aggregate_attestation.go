@@ -13,5 +13,5 @@ func AggregateAttestation(ctx context.Context, cli eth2api.Client,
 		"attestation_data_root": attDataRoot,
 		"slot":                  slot,
 	}
-	return eth2api.MinimalRequest(ctx, cli, eth2api.QueryGET(q, "eth/v1/validator/aggregate_attestation"), dest)
+	return eth2api.MinimalRequest(ctx, cli, eth2api.QueryGET(q, "eth/v1/validator/aggregate_attestation"), eth2api.Wrap(dest))
 }

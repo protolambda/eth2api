@@ -25,6 +25,10 @@ type ChainHead struct {
 	Slot beacon.Slot `json:"slot"`
 }
 
+type RootResponse struct {
+	Root beacon.Root `json:"root"`
+}
+
 type FinalityCheckpoints struct {
 	PreviousJustified beacon.Checkpoint `json:"previous_justified"`
 	CurrentJustified  beacon.Checkpoint `json:"current_justified"`
@@ -46,7 +50,11 @@ type DependentProposerDuty struct {
 }
 
 type ProposerDuty struct {
-	// TODO
+	Pubkey beacon.BLSPubkey `json:"pubkey"`
+	// Index of validator in validator registry
+	ValidatorIndex beacon.ValidatorIndex `json:"validator_index"`
+	// The slot at which the validator must propose block.
+	Slot beacon.Slot
 }
 
 // Wrapper around the original AttesterDuty response
@@ -57,7 +65,19 @@ type DependentAttesterDuties struct {
 }
 
 type AttesterDuty struct {
-	// TODO
+	Pubkey beacon.BLSPubkey `json:"pubkey"`
+	// Index of validator in validator registry
+	ValidatorIndex beacon.ValidatorIndex `json:"validator_index"`
+	// The committee index
+	CommitteeIndex beacon.CommitteeIndex `json:"committee_index"`
+	// Number of validators in committee
+	CommitteeLength view.Uint64View `json:"committee_length"`
+	// Number of committees at the provided slot
+	CommitteesAtSlot view.Uint64View `json:"committees_at_slot"`
+	// Index of validator in committee
+	ValidatorCommitteeIndex view.Uint64View `json:"validator_committee_index"`
+	// The slot at which the validator must attest.
+	Slot beacon.Slot `json:"slot"`
 }
 
 type BeaconCommitteeSubscribeSignal struct {

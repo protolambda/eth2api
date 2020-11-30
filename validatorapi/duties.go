@@ -35,7 +35,7 @@ func AttesterDuties(ctx context.Context, cli eth2api.Client,
 		}
 		return false, err
 	}
-	return false, resp.Decode(&dest)
+	return false, resp.Decode(dest)  // not wrapped, the request type already breaks the `data` boundary
 }
 
 // Request beacon node to provide all validators that are scheduled to propose a block in the given epoch.
@@ -61,5 +61,5 @@ func ProposerDuties(ctx context.Context, cli eth2api.Client, epoch beacon.Epoch,
 		}
 		return false, err
 	}
-	return false, resp.Decode(&dest)
+	return false, resp.Decode(dest)  // not wrapped, the request type already breaks the `data` boundary
 }

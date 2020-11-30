@@ -4,6 +4,24 @@ Fully typed API bindings, for both client and server, to implement [the standard
 
 **Work in progress, incomplete**
 
+The API design is not definite yet, current bindings are based on Eth2.0-apis commit `ceb555f9b40ff9c2094d038e9f70a19419e5b652`.
+
+## Example
+
+```go
+package main
+
+import (
+	"github.com/protolambda/eth2api"
+	"github.com/protolambda/eth2api/beaconapi"
+)
+
+func main() {
+	
+
+}
+```
+
 ## How is this different from [`prysmaticlabs/ethereumapis`](https://github.com/prysmaticlabs/ethereumapis)?
 
 - Stricter typing, bazed on [ZRNT](https://github.com/protolambda/zrnt)

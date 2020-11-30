@@ -23,5 +23,5 @@ func ProduceBlock(ctx context.Context, cli eth2api.Client,
 		}
 		return false, err
 	}
-	return false, resp.Decode(dest)
+	return false, resp.Decode(eth2api.Wrap(dest))
 }

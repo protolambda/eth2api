@@ -14,5 +14,5 @@ func AttestationData(ctx context.Context, cli eth2api.Client,
 		"slot":            slot,
 		"committee_index": committeeIndex,
 	}
-	return eth2api.MinimalRequest(ctx, cli, eth2api.QueryGET(q, "eth/v1/validator/attestation_data"), dest)
+	return eth2api.MinimalRequest(ctx, cli, eth2api.QueryGET(q, "eth/v1/validator/attestation_data"), eth2api.Wrap(dest))
 }

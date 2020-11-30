@@ -8,12 +8,12 @@ import (
 
 // Retrieves attestations included in requested block.
 func BlockAttestations(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, dest *[]beacon.Attestation) (exists bool, err error) {
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/blocks/%s/attestations", blockId.BlockId()), dest)
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/blocks/%s/attestations", blockId.BlockId()), eth2api.Wrap(dest))
 }
 
 // Retrieves block details for given block id.
 func Block(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, dest *beacon.SignedBeaconBlock) (exists bool, err error) {
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/blocks/%s", blockId.BlockId()), dest)
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/blocks/%s", blockId.BlockId()), eth2api.Wrap(dest))
 }
 
 // Instructs the beacon node to broadcast a newly signed beacon block to the beacon network,
@@ -40,7 +40,7 @@ func BlockHeader(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockI
 	if blockId == nil {
 		return false, eth2api.MissingRequiredParamErr
 	}
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/blocks/%s", blockId.BlockId()), dest)
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/blocks/%s", blockId.BlockId()), eth2api.Wrap(dest))
 }
 
 // Retrieves block headers matching given query. By default it will fetch current head slot blocks.
@@ -55,10 +55,10 @@ func BlockHeaders(ctx context.Context, cli eth2api.Client, slot *beacon.Slot, pa
 	} else if parentRoot != nil {
 		q = eth2api.Query{"parent_root": *parentRoot}
 	}
-	return eth2api.SimpleRequest(ctx, cli, eth2api.QueryGET(q, "eth/v1/beacon/blocks/header"), dest)
+	return eth2api.SimpleRequest(ctx, cli, eth2api.QueryGET(q, "eth/v1/beacon/blocks/header"), eth2api.Wrap(dest))
 }
 
 // Retrieves hashTreeRoot of BeaconBlock/BeaconBlockHeader.
-func BlockRoot(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, dest *beacon.Root) (exists bool, err error) {
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/blocks/%s/root", blockId.BlockId()), dest)
+func BlockRoot(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, dest *eth2api.RootResponse) (exists bool, err error) {
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/blocks/%s/root", blockId.BlockId()), eth2api.Wrap(dest))
 }

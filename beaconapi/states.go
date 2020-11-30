@@ -31,48 +31,52 @@ func EpochCommittees(ctx context.Context, cli eth2api.Client,
 			q["slot"] = *slot
 		}
 	}
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtQueryGET(q, "eth/v1/beacon/states/%s/committees", stateId.StateId()), dest)
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtQueryGET(q, "eth/v1/beacon/states/%s/committees", stateId.StateId()), eth2api.Wrap(dest))
 }
 
 // Returns finality checkpoints for state with given 'stateId'.
 // In case finality is not yet achieved, checkpoint should return epoch 0 and ZERO_HASH as root.
 func FinalityCheckpoints(ctx context.Context, cli eth2api.Client,
 	stateId eth2api.StateId, dest *eth2api.FinalityCheckpoints) (exists bool, err error) {
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/states/%s/finality_checkpoints", stateId.StateId()), dest)
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/states/%s/finality_checkpoints", stateId.StateId()), eth2api.Wrap(dest))
 }
 
 // Returns Fork object for state with given 'stateId'
 func Fork(ctx context.Context, cli eth2api.Client,
 	stateId eth2api.StateId, dest *beacon.Version) (exists bool, err error) {
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/states/%s/fork", stateId.StateId()), dest)
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/states/%s/fork", stateId.StateId()), eth2api.Wrap(dest))
 }
 
 // Calculates HashTreeRoot for state with given 'stateId'. If stateId is root, same value will be returned.
 func StateRoot(ctx context.Context, cli eth2api.Client,
 	stateId eth2api.StateId, dest *beacon.Root) (exists bool, err error) {
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/states/%s/root", stateId.StateId()), dest)
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/states/%s/root", stateId.StateId()), eth2api.Wrap(dest))
 }
 
 // Returns validator specified by state and id or public key along with status and balance.
 func StateValidator(ctx context.Context, cli eth2api.Client,
 	stateId eth2api.StateId, validatorId eth2api.ValidatorId, dest *eth2api.ValidatorResponse) (exists bool, err error) {
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/states/%s/validator/%s", stateId.StateId(), validatorId.ValidatorId()), dest)
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/states/%s/validator/%s", stateId.StateId(), validatorId.ValidatorId()), eth2api.Wrap(dest))
 }
 
 // Returns filterable list of validator balances.
+//
+// Note that any invalid validators with invalid IDs may be ignored, and omitted from the otherwise valid response.
 func StateValidatorBalances(ctx context.Context, cli eth2api.Client,
-	stateId eth2api.StateId, validatorIds []eth2api.ValidatorId, dest *[]eth2api.ValidatorBalanceResponse) (exists bool, err error) { // TODO: indexed failures may be available
+	stateId eth2api.StateId, validatorIds []eth2api.ValidatorId, dest *[]eth2api.ValidatorBalanceResponse) (exists bool, err error) {
 	var q eth2api.Query
 	if validatorIds != nil {
 		q = eth2api.Query{"id": validatorIds}
 	}
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtQueryGET(q, "eth/v1/beacon/states/%s/validator_balances", stateId.StateId()), dest)
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtQueryGET(q, "eth/v1/beacon/states/%s/validator_balances", stateId.StateId()), eth2api.Wrap(dest))
 }
 
 // Returns filterable list of validators with their balance, status and index.
 // The status filter is optional, and filters the query to just the given set of status enum values.
+//
+// Note that any invalid validators with invalid IDs may be ignored, and omitted from the otherwise valid response.
 func StateValidators(ctx context.Context, cli eth2api.Client,
-	stateId eth2api.StateId, validatorIds []eth2api.ValidatorId, statusFilter []eth2api.ValidatorStatus, dest *[]eth2api.ValidatorResponse) (exists bool, err error) { // TODO: indexed failures may be available
+	stateId eth2api.StateId, validatorIds []eth2api.ValidatorId, statusFilter []eth2api.ValidatorStatus, dest *[]eth2api.ValidatorResponse) (exists bool, err error) {
 	var q eth2api.Query
 	if validatorIds != nil || statusFilter != nil {
 		q = make(eth2api.Query)
@@ -83,5 +87,5 @@ func StateValidators(ctx context.Context, cli eth2api.Client,
 			q["status"] = statusFilter
 		}
 	}
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtQueryGET(q, "eth/v1/beacon/states/%s/validator_balances", stateId.StateId()), dest)
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtQueryGET(q, "eth/v1/beacon/states/%s/validator_balances", stateId.StateId()), eth2api.Wrap(dest))
 }

@@ -18,7 +18,7 @@ func PoolAttestations(ctx context.Context, cli eth2api.Client, slot *beacon.Slot
 	} else if committeeIndex != nil {
 		q = eth2api.Query{"committee_index": *committeeIndex}
 	}
-	return eth2api.MinimalRequest(ctx, cli, eth2api.QueryGET(q, "eth/v1/beacon/pool/attestations"), dest)
+	return eth2api.MinimalRequest(ctx, cli, eth2api.QueryGET(q, "eth/v1/beacon/pool/attestations"), eth2api.Wrap(dest))
 }
 
 // Submits Attestation objects to the node.  Each attestation in the request body is processed individually.
@@ -40,7 +40,7 @@ func SubmitAttestations(ctx context.Context, cli eth2api.Client, attestations []
 
 // Retrieves attester slashings known by the node but not necessarily incorporated into any block.
 func PoolAttesterSlashings(ctx context.Context, cli eth2api.Client, dest *[]beacon.AttesterSlashings) error {
-	return eth2api.MinimalRequest(ctx, cli, eth2api.PlainGET("eth/v1/beacon/pool/attester_slashings"), dest)
+	return eth2api.MinimalRequest(ctx, cli, eth2api.PlainGET("eth/v1/beacon/pool/attester_slashings"), eth2api.Wrap(dest))
 }
 
 // Submits AttesterSlashing object to node's pool and if passes validation node MUST broadcast it to network.
@@ -50,7 +50,7 @@ func SubmitAttesterSlashing(ctx context.Context, cli eth2api.Client, attSlashing
 
 // Retrieves proposer slashings known by the node but not necessarily incorporated into any block.
 func PoolProposerSlashings(ctx context.Context, cli eth2api.Client, dest *[]beacon.ProposerSlashing) error {
-	return eth2api.MinimalRequest(ctx, cli, eth2api.PlainGET("eth/v1/beacon/pool/proposer_slashings"), dest)
+	return eth2api.MinimalRequest(ctx, cli, eth2api.PlainGET("eth/v1/beacon/pool/proposer_slashings"), eth2api.Wrap(dest))
 }
 
 // Submits ProposerSlashing object to node's pool and if passes validation node MUST broadcast it to network.
@@ -60,7 +60,7 @@ func SubmitProposerSlashing(ctx context.Context, cli eth2api.Client, propSlashin
 
 // Retrieves voluntary exits known by the node but not necessarily incorporated into any block.
 func PoolVoluntaryExits(ctx context.Context, cli eth2api.Client, dest *[]beacon.SignedVoluntaryExit) error {
-	return eth2api.MinimalRequest(ctx, cli, eth2api.PlainGET("eth/v1/beacon/pool/voluntary_exits"), dest)
+	return eth2api.MinimalRequest(ctx, cli, eth2api.PlainGET("eth/v1/beacon/pool/voluntary_exits"), eth2api.Wrap(dest))
 }
 
 // Submits SignedVoluntaryExit object to node's pool and if passes validation node MUST broadcast it to network.

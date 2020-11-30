@@ -36,6 +36,16 @@ var MissingRequiredParamErr = errors.New("missing required param")
 
 var DecodeNoContentErr = errors.New("no contents were available to decode")
 
+// DataWrap is a util to accommodate responses which are wrapped
+// with a single field container with key "data".
+type DataWrap struct {
+	Data interface{} `json:"data"`
+}
+
+func Wrap(data interface{}) DataWrap {
+	return DataWrap{Data: data}
+}
+
 type Response interface {
 	// Decode into destination type. May throw a decoding error.
 	// Or throws DecodeNoContentErr if it was an error without returned value.
