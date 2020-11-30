@@ -31,6 +31,17 @@ type FinalityCheckpoints struct {
 	Finalized         beacon.Checkpoint `json:"finalized"`
 }
 
+type SyncingStatus struct {
+	// Head slot node is trying to reach
+	HeadSlot beacon.Slot `json:"head_slot"`
+	// How many slots node needs to process to reach head. 0 if synced.
+	SyncDistance beacon.Slot `json:"sync_distance"`
+}
+
+type NodeVersionResponse struct {
+	Version string `json:"version"`
+}
+
 type ValidatorResponse struct {
 	// Index of validator in validator registry.
 	Index beacon.ValidatorIndex `json:"index"`
@@ -90,6 +101,14 @@ type NetworkIdentity struct {
 
 	// Based on eth2 Metadata object
 	Metadata beacon.MetaData `json:"metadata"`
+}
+
+// Retrieves number of known peers.
+type PeerCountResponse struct {
+	Disconnected  view.Uint64View `json:"disconnected"`
+	Connecting    view.Uint64View `json:"connecting"`
+	Connected     view.Uint64View `json:"connected"`
+	Disconnecting view.Uint64View `json:"disconnecting"`
 }
 
 type Peer struct {
