@@ -7,6 +7,8 @@ import (
 )
 
 // Requests a beacon node to produce a valid block, which can then be signed by a validator.
+//
+// Err will be non-nil when syncing.
 func ProduceBlock(ctx context.Context, cli eth2api.Client,
 	slot beacon.Slot, randaoReveal beacon.BLSSignature, graffiti *beacon.Root, dest *beacon.BeaconBlock) (syncing bool, err error) {
 	q := eth2api.Query{
@@ -17,11 +19,8 @@ func ProduceBlock(ctx context.Context, cli eth2api.Client,
 	}
 	req := eth2api.FmtQueryGET(q, "eth/v1/validator/blocks/%d", slot)
 	resp := cli.Request(ctx, req)
-	if err := resp.Err(); err != nil {
-		if err.Code() == 503 {
-			return true, nil
-		}
-		return false, err
-	}
-	return false, resp.Decode(eth2api.Wrap(dest))
+	var code uint
+	code, err = resp.Decode(eth2api.Wrap(dest))
+	syncing = code == 503
+	return
 }

@@ -29,13 +29,10 @@ func AttesterDuties(ctx context.Context, cli eth2api.Client,
 	epoch beacon.Epoch, indices []beacon.ValidatorIndex, dest *eth2api.DependentAttesterDuties) (syncing bool, err error) {
 	req := eth2api.BodyPOST(fmt.Sprintf("eth/v1/validator/duties/attester/%d", epoch), indices)
 	resp := cli.Request(ctx, req)
-	if err := resp.Err(); err != nil {
-		if err.Code() == 503 {
-			return true, nil
-		}
-		return false, err
-	}
-	return false, resp.Decode(dest)  // not wrapped, the request type already breaks the `data` boundary
+	var code uint
+	code, err = resp.Decode(dest) // not wrapped, the request type already breaks the `data` boundary
+	syncing = code == 503
+	return
 }
 
 // Request beacon node to provide all validators that are scheduled to propose a block in the given epoch.
@@ -51,15 +48,12 @@ func AttesterDuties(ctx context.Context, cli eth2api.Client,
 // The dependent_root value is `get_block_root_at_slot(state, compute_start_slot_at_epoch(epoch) - 1)`
 // or the genesis block root in the case of underflow.
 //
-// When syncing, it is indicated that the duties are unknown, but without error.
+// Err will be non-nil when syncing.
 func ProposerDuties(ctx context.Context, cli eth2api.Client, epoch beacon.Epoch, dest *eth2api.DependentProposerDuty) (syncing bool, err error) {
 	req := eth2api.FmtGET("eth/v1/validator/duties/proposer/%d", epoch)
 	resp := cli.Request(ctx, req)
-	if err := resp.Err(); err != nil {
-		if err.Code() == 503 {
-			return true, nil
-		}
-		return false, err
-	}
-	return false, resp.Decode(dest)  // not wrapped, the request type already breaks the `data` boundary
+	var code uint
+	code, err = resp.Decode(dest) // not wrapped, the request type already breaks the `data` boundary
+	syncing = code == 503
+	return
 }

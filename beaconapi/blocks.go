@@ -25,13 +25,9 @@ func Block(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, des
 func PublishBlock(ctx context.Context, cli eth2api.Client, block *beacon.SignedBeaconBlock) (valid bool, err error) {
 	req := eth2api.BodyPOST("eth/v1/beacon/blocks", block)
 	resp := cli.Request(ctx, req)
-	if err := resp.Err(); err != nil {
-		if err.Code() == 202 {
-			return false, nil
-		}
-		return false, err
-	}
-	valid = true
+	var code uint
+	code, err = resp.Decode(nil)
+	valid = code != 202
 	return
 }
 

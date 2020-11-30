@@ -29,7 +29,8 @@ func PoolAttestations(ctx context.Context, cli eth2api.Client, slot *beacon.Slot
 // In that case, a non-nil list of errors will be returned, with entries pointing to original array indices of input attestations
 func SubmitAttestations(ctx context.Context, cli eth2api.Client, attestations []beacon.Attestation) (failures []eth2api.IndexedErrorMessageItem, err error) {
 	resp := cli.Request(ctx, eth2api.BodyPOST("eth/v1/beacon/pool/attestations", attestations))
-	if err := resp.Err(); err != nil {
+	_, err = resp.Decode(nil)
+	if err != nil {
 		if ierr, ok := err.(eth2api.IndexedError); ok {
 			return ierr.IndexedErrors(), err
 		}

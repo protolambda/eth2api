@@ -6,13 +6,12 @@ import (
 )
 
 // Checks node health. Healthy = no error. May be syncing, capable of serving incomplete data.
-func ChainHeads(ctx context.Context, cli eth2api.Client) (syncing bool, err error) {
+//
+// Err will be non-nil when syncing.
+func Health(ctx context.Context, cli eth2api.Client) (syncing bool, err error) {
 	resp := cli.Request(ctx, eth2api.PlainGET("eth/v1/node/health"))
-	if err := resp.Err(); err != nil {
-		if err.Code() == 206 {
-			return true, nil
-		}
-		return false, err
-	}
-	return false, nil
+	var code uint
+	code, err = resp.Decode(nil)
+	syncing = code == 206
+	return
 }
