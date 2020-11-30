@@ -1,5 +1,10 @@
 package eth2api
 
+type ApiError interface {
+	error
+	Code() uint
+}
+
 // ErrorResponse is a base struct with common error contents for responses.
 type ErrorResponse struct {
 	// The response solely consists of a ErrorMessage

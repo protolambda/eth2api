@@ -103,11 +103,15 @@ type ApiPeerId string
 
 type ErrorMessage struct {
 	// Either specific error code in case of invalid request or http status code
-	Code uint `json:"code"`
+	CodeValue uint `json:"code"`
 	// Message describing error
 	Message string `json:"message"`
 	// Optional stacktraces, sent when node is in debug mode
 	Stacktraces []string `json:"stacktraces"`
+}
+
+func (err *ErrorMessage) Code() uint {
+	return err.CodeValue
 }
 
 func (err *ErrorMessage) Error() string {
@@ -115,7 +119,7 @@ func (err *ErrorMessage) Error() string {
 	if len(err.Stacktraces) > 0 {
 		stack = "\n" + strings.Join(err.Stacktraces, "\n")
 	}
-	return fmt.Sprintf("Error(%d): %s", err.Code, err.Message+stack)
+	return fmt.Sprintf("Error(%d): %s", err.CodeValue, err.Message+stack)
 }
 
 type IndexedErrorMessageItem struct {
