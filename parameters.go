@@ -3,6 +3,7 @@ package eth2api
 import (
 	"github.com/protolambda/zrnt/eth2/beacon"
 	"strconv"
+	"strings"
 )
 
 type ValidatorId interface {
@@ -50,6 +51,25 @@ const (
 	StateJustified StateIdStrMode = "justified"
 )
 
+func ParseStateId(v string) (StateId, error) {
+	if strings.HasPrefix("0x", v) {
+		var root beacon.Root
+		if err := root.UnmarshalText([]byte(v)); err != nil {
+			return nil, err
+		}
+		return StateIdRoot(root), nil
+	}
+	asMode := StateIdStrMode(v)
+	if asMode == StateHead || asMode == StateGenesis || asMode == StateFinalized || asMode == StateJustified {
+		return asMode, nil
+	}
+	n, err := strconv.ParseUint(v, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	return StateIdSlot(n), nil
+}
+
 // Block identifier
 // Can have different shapes. E.g. BlockHead, BlockIdSlot(123), BlockIdRoot(Root{0x...})
 type BlockId interface {
@@ -79,3 +99,22 @@ const (
 	BlockGenesis   BlockIdStrMode = "genesis"
 	BlockFinalized BlockIdStrMode = "finalized"
 )
+
+func ParseBlockId(v string) (BlockId, error) {
+	if strings.HasPrefix("0x", v) {
+		var root beacon.Root
+		if err := root.UnmarshalText([]byte(v)); err != nil {
+			return nil, err
+		}
+		return BlockIdRoot(root), nil
+	}
+	asMode := BlockIdStrMode(v)
+	if asMode == BlockHead || asMode == BlockGenesis || asMode == BlockFinalized {
+		return asMode, nil
+	}
+	n, err := strconv.ParseUint(v, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	return BlockIdSlot(n), nil
+}

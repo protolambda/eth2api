@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -45,8 +46,8 @@ type DataWrap struct {
 	Data interface{} `json:"data"`
 }
 
-func Wrap(data interface{}) DataWrap {
-	return DataWrap{Data: data}
+func Wrap(data interface{}) *DataWrap {
+	return &DataWrap{Data: data}
 }
 
 type Response interface {
@@ -57,36 +58,41 @@ type Response interface {
 	Decode(dest interface{}) (code uint, err error)
 }
 
+type ClientFunc func(ctx context.Context, req Request) Response
+
+func (fn ClientFunc) Request(ctx context.Context, req Request) Response {
+	return fn(ctx, req)
+}
+
 type Client interface {
 	Request(ctx context.Context, req Request) Response
 }
 
 type HttpResponse http.Response
 
-func (resp *HttpResponse) Decode(dest interface{}) (code uint, err error) {
-	hr := (*http.Response)(resp)
-	defer hr.Body.Close()
-	code = uint(hr.StatusCode)
+func DecodeBody(code uint, body io.ReadCloser, dest interface{}) (codeOut uint, err error) {
+	defer body.Close()
+	codeOut = code
 	if code < 200 {
-		return code, fmt.Errorf("unexpected response status code: %d", hr.StatusCode)
+		return code, fmt.Errorf("unexpected response status code: %d", code)
 	} else if code < 300 {
-		dec := json.NewDecoder(hr.Body)
+		dec := json.NewDecoder(body)
 		return code, dec.Decode(dest)
 	} else {
 		// TODO: handle indexed errors
 
 		var ierr ErrorResponse
-		dec := json.NewDecoder(hr.Body)
+		dec := json.NewDecoder(body)
 		if err := dec.Decode(&ierr); err != nil {
-			return code, ClientApiErr{fmt.Errorf("failed to decode error response with status code: %d", hr.StatusCode)}
+			return code, ClientApiErr{fmt.Errorf("failed to decode error response with status code: %d", code)}
 		}
-		if hr.StatusCode < 500 {
+		if code < 500 {
 			return code, &InvalidRequest{ierr}
 		}
-		if hr.StatusCode == 503 {
+		if code == 503 {
 			return code, &CurrentlySyncing{ierr}
 		}
-		if hr.StatusCode < 600 {
+		if code < 600 {
 			return code, &InternalError{ierr}
 		}
 		return code, &ierr
@@ -95,6 +101,11 @@ func (resp *HttpResponse) Decode(dest interface{}) (code uint, err error) {
 	// and using Content-Length for fast SSZ streaming
 	// (after unwrapping the contents from the inner Data field and checking SSZ support,
 	//  and sourcing a spec from somewhere)
+}
+
+func (resp *HttpResponse) Decode(dest interface{}) (code uint, err error) {
+	hr := (*http.Response)(resp)
+	return DecodeBody(uint(hr.StatusCode), hr.Body, dest)
 }
 
 type HttpClient struct {

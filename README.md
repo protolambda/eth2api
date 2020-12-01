@@ -38,6 +38,7 @@ import (
 func main() {
     // Make an HTTP client (reuse connections!)
     client := &eth2api.HttpClient{
+        Addr: "http://localhost:5052",
         Cli: &http.Client{
             Transport: &http.Transport{
                 MaxIdleConnsPerHost: 123,
