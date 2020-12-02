@@ -87,5 +87,5 @@ func StateValidators(ctx context.Context, cli eth2api.Client,
 			q["status"] = statusFilter
 		}
 	}
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtQueryGET(q, "eth/v1/beacon/states/%s/validator_balances", stateId.StateId()), eth2api.Wrap(dest))
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtQueryGET(q, "eth/v1/beacon/states/%s/validators", stateId.StateId()), eth2api.Wrap(dest))
 }
