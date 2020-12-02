@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/protolambda/eth2api"
+	"github.com/protolambda/zrnt/eth2/beacon"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -15,14 +16,31 @@ import (
 	"testing"
 )
 
+// All possible API method inputs (params and post-body inputs).
+// All of these are optional (not all methods use all inputs).
+// A test method can then selectively use them as inputs,
+// they still may be nil if they are supposed to be omitted as an optional test-input parameter.
 type Input struct {
-	ValueStateId string `json:"state_id,omitempty"`
-	ValueBlockId string `json:"block_id,omitempty"`
+	ValueStateId      *string `json:"state_id,omitempty"`
+	ValueBlockId      *string `json:"block_id,omitempty"`
+	ValueValidatorId  *string `json:"validator_id,omitempty"`
+	ValueValidatorIds *string `json:"val_ids,omitempty"`
+
+	Slot           *beacon.Slot               `json:"slot,omitempty"`
+	Root           *beacon.Root               `json:"root,omitempty"`
+	Epoch          *beacon.Epoch              `json:"epoch,omitempty"`
+	CommitteeIndex *beacon.CommitteeIndex     `json:"committee_index,omitempty"`
+	ParentRoot     *beacon.Root               `json:"parent_root,omitempty"`
+	Block          *beacon.SignedBeaconBlock  `json:"block,omitempty"`
+	StatusFilter   []eth2api.ValidatorStatus  `json:"validator_statuses,omitempty"`
 	// TODO: whole list of possible inputs
 }
 
 func (input *Input) StateId() eth2api.StateId {
-	v, err := eth2api.ParseStateId(input.ValueStateId)
+	if input.ValueStateId == nil {
+		return nil
+	}
+	v, err := eth2api.ParseStateId(*input.ValueStateId)
 	if err != nil {
 		panic(err) // invalid test resource
 	}
@@ -30,7 +48,37 @@ func (input *Input) StateId() eth2api.StateId {
 }
 
 func (input *Input) BlockId() eth2api.BlockId {
-	v, err := eth2api.ParseBlockId(input.ValueBlockId)
+	if input.ValueBlockId == nil {
+		return nil
+	}
+	v, err := eth2api.ParseBlockId(*input.ValueBlockId)
+	if err != nil {
+		panic(err) // invalid test resource
+	}
+	return v
+}
+
+func (input *Input) ValidatorIds() []eth2api.ValidatorId {
+	if input.ValueValidatorIds == nil {
+		return nil
+	}
+	ids := strings.Split(*input.ValueValidatorIds, ",")
+	out := make([]eth2api.ValidatorId, len(ids), len(ids))
+	var err error
+	for i, id := range ids {
+		out[i], err = eth2api.ParseValidatorId(id)
+		if err != nil {
+			panic(err) // invalid test resource
+		}
+	}
+	return out
+}
+
+func (input *Input) ValidatorId() eth2api.ValidatorId {
+	if input.ValueValidatorId == nil {
+		return nil
+	}
+	v, err := eth2api.ParseValidatorId(*input.ValueValidatorId)
 	if err != nil {
 		panic(err) // invalid test resource
 	}
@@ -56,6 +104,7 @@ func (mr *mockResponse) UnmarshalJSON(v []byte) error {
 }
 
 type mockExchange struct {
+	Description      string       `json:"description"`
 	Input            Input        `json:"input"`
 	ExpectedPath     string       `json:"path"`
 	ExpectedPostBody string       `json:"post_body,omitempty"`
@@ -123,6 +172,7 @@ func RunAll(t *testing.T, testsDir string, name string, caseFn func(ctx context.
 		cases := loadTests(t, path.Join(testsDir, name+".json"))
 		for i, c := range cases {
 			t.Run(fmt.Sprintf("case_%d", i), func(t *testing.T) {
+				t.Logf("description: %s", c.Description)
 				spy := &requestSpy{
 					t:            t,
 					mockExchange: c,
@@ -131,7 +181,15 @@ func RunAll(t *testing.T, testsDir string, name string, caseFn func(ctx context.
 				ctx := context.Background()
 				err := caseFn(ctx, &c.Input, spy)
 				if err != nil {
-					t.Error(err)
+					if codedErr, ok := err.(eth2api.ApiError); ok {
+						if code := codedErr.Code(); code != spy.Code {
+							t.Errorf("unexpected code change in bindings: got: %d expected: %d", code, spy.Code)
+						}
+						// error was expected if code matches.
+					} else {
+						// e.g. failed to decode response contents
+						t.Errorf("unexpected bindings error: %v", err)
+					}
 				}
 			})
 		}

@@ -32,6 +32,9 @@ func PublishBlock(ctx context.Context, cli eth2api.Client, block *beacon.SignedB
 }
 
 // Retrieves hashTreeRoot of BeaconBlock/BeaconBlockHeader.
-func BlockRoot(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, dest *eth2api.RootResponse) (exists bool, err error) {
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/blocks/%s/root", blockId.BlockId()), eth2api.Wrap(dest))
+func BlockRoot(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId) (root beacon.Root, exists bool, err error) {
+	var dest eth2api.RootResponse
+	exists, err = eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/blocks/%s/root", blockId.BlockId()), eth2api.Wrap(&dest))
+	root = dest.Root
+	return
 }

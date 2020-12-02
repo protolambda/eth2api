@@ -22,6 +22,21 @@ func (v ValidatorIdIndex) ValidatorId() string {
 	return strconv.FormatUint(uint64(v), 10)
 }
 
+func ParseValidatorId(v string) (ValidatorId, error) {
+	if strings.HasPrefix("0x", v) {
+		var pub beacon.BLSPubkey
+		if err := pub.UnmarshalText([]byte(v)); err != nil {
+			return nil, err
+		}
+		return ValidatorIdPubkey(pub), nil
+	}
+	n, err := strconv.ParseUint(v, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	return ValidatorIdIndex(n), nil
+}
+
 type StateId interface {
 	StateId() string
 }

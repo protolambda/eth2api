@@ -43,14 +43,17 @@ func FinalityCheckpoints(ctx context.Context, cli eth2api.Client,
 
 // Returns Fork object for state with given 'stateId'
 func Fork(ctx context.Context, cli eth2api.Client,
-	stateId eth2api.StateId, dest *beacon.Version) (exists bool, err error) {
+	stateId eth2api.StateId, dest *beacon.Fork) (exists bool, err error) {
 	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/states/%s/fork", stateId.StateId()), eth2api.Wrap(dest))
 }
 
 // Calculates HashTreeRoot for state with given 'stateId'. If stateId is root, same value will be returned.
 func StateRoot(ctx context.Context, cli eth2api.Client,
-	stateId eth2api.StateId, dest *beacon.Root) (exists bool, err error) {
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/states/%s/root", stateId.StateId()), eth2api.Wrap(dest))
+	stateId eth2api.StateId) (root beacon.Root, exists bool, err error) {
+	var dest eth2api.RootResponse
+	exists, err = eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/states/%s/root", stateId.StateId()), eth2api.Wrap(&dest))
+	root = dest.Root
+	return
 }
 
 // Returns validator specified by state and id or public key along with status and balance.

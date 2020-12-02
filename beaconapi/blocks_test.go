@@ -8,9 +8,37 @@ import (
 	"testing"
 )
 
-func TestBlockHeader(t *testing.T) {
-	shared_test.RunAll(t, "../tests/beacon", "get_header",
+func TestBlockAttestations(t *testing.T) {
+	shared_test.RunAll(t, "../tests/beacon/blocks", "get_block_attestations",
 		func(ctx context.Context, input *shared_test.Input, cli eth2api.Client) error {
-			return shared_test.MustExist(BlockHeader(ctx, cli, input.BlockId(), new(beacon.SignedBeaconBlockHeader)))
+			_, err := BlockAttestations(ctx, cli, input.BlockId(), new([]beacon.Attestation))
+			return err
+		})
+}
+
+func TestBlock(t *testing.T) {
+	shared_test.RunAll(t, "../tests/beacon/blocks", "get_block",
+		func(ctx context.Context, input *shared_test.Input, cli eth2api.Client) error {
+			_, err := Block(ctx, cli, input.BlockId(), new(beacon.SignedBeaconBlock))
+			return err
+		})
+}
+
+func TestBlockRoot(t *testing.T) {
+	shared_test.RunAll(t, "../tests/beacon/blocks", "get_block_root",
+		func(ctx context.Context, input *shared_test.Input, cli eth2api.Client) error {
+			_, _, err := BlockRoot(ctx, cli, input.BlockId())
+			return err
+		})
+}
+
+func TestPublishBlock(t *testing.T) {
+	// TODO: test vectors here don't work yet.
+	t.SkipNow()
+
+	shared_test.RunAll(t, "../tests/beacon/blocks", "post_block",
+		func(ctx context.Context, input *shared_test.Input, cli eth2api.Client) error {
+			_, err := PublishBlock(ctx, cli, input.Block)
+			return err
 		})
 }

@@ -40,7 +40,7 @@ func SubmitAttestations(ctx context.Context, cli eth2api.Client, attestations []
 }
 
 // Retrieves attester slashings known by the node but not necessarily incorporated into any block.
-func PoolAttesterSlashings(ctx context.Context, cli eth2api.Client, dest *[]beacon.AttesterSlashings) error {
+func PoolAttesterSlashings(ctx context.Context, cli eth2api.Client, dest *[]beacon.AttesterSlashing) error {
 	return eth2api.MinimalRequest(ctx, cli, eth2api.PlainGET("eth/v1/beacon/pool/attester_slashings"), eth2api.Wrap(dest))
 }
 

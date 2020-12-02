@@ -114,18 +114,24 @@ type ValidatorBalanceResponse struct {
 	Balance beacon.Gwei `json:"balance"`
 }
 
-type ValidatorStatus struct {
-	// TODO enum with or without additional values?
-	//- pending_initialized
-	//- pending_queued
-	//- active_ongoing
-	//- active_exiting
-	//- active_slashed
-	//- exited_unslashed
-	//- exited_slashed
-	//- withdrawal_possible
-	//- withdrawal_done
-}
+// TODO enum with or without additional values?
+type ValidatorStatus string
+
+// status names known from lighthouse, differ from spec, TODO
+const (
+	ValidatorStatusUnknown                     ValidatorStatus = "unknown"
+	ValidatorStatusWaitingForEligibility       ValidatorStatus = "waiting_for_eligibility"
+	ValidatorStatusWaitingForFinality          ValidatorStatus = "waiting_for_finality"
+	ValidatorStatusWaitingInQueue              ValidatorStatus = "waiting_in_queue"
+	ValidatorStatusStandbyForActive            ValidatorStatus = "standby_for_active"
+	ValidatorStatusActive                      ValidatorStatus = "active"
+	ValidatorStatusActiveAwaitingVoluntaryExit ValidatorStatus = "active_awaiting_voluntary_exit"
+	ValidatorStatusActiveAwaitingSlashedExit   ValidatorStatus = "active_awaiting_slashed_exit"
+	ValidatorStatusExitedVoluntarily           ValidatorStatus = "exited_voluntarily"
+	ValidatorStatusExitedSlashed               ValidatorStatus = "exited_slashed"
+	ValidatorStatusWithdrawable                ValidatorStatus = "withdrawable"
+	ValidatorStatusWithdrawn                   ValidatorStatus = "withdrawn"
+)
 
 type Committee struct {
 	// Committee index at a slot
