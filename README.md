@@ -79,6 +79,15 @@ func main() {
 }
 ```
 
+## Testing
+
+Testing is not fully automated yet, awaiting first test vector release.
+
+For now, you can:
+- Use [`protolambda/eth2-api-testgen`](https://github.com/protolambda/eth2-api-testgen) to generate test vectors.
+- Copy the `output` dir to the `tests` dir in this repo. (`cp -r ../eth2-api-testgen/output tests`)
+- Run the Go tests in this repo (`go test ./...`)
+
 ## How is this different from [`prysmaticlabs/ethereumapis`](https://github.com/prysmaticlabs/ethereumapis)?
 
 - Stricter typing, bazed on [ZRNT](https://github.com/protolambda/zrnt)
