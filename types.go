@@ -117,6 +117,10 @@ type ValidatorBalanceResponse struct {
 // TODO enum with or without additional values?
 type ValidatorStatus string
 
+func (vs ValidatorStatus) String() string {
+	return string(vs)
+}
+
 // status names known from lighthouse, differ from spec, TODO
 const (
 	ValidatorStatusUnknown                     ValidatorStatus = "unknown"

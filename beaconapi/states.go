@@ -59,7 +59,7 @@ func StateRoot(ctx context.Context, cli eth2api.Client,
 // Returns validator specified by state and id or public key along with status and balance.
 func StateValidator(ctx context.Context, cli eth2api.Client,
 	stateId eth2api.StateId, validatorId eth2api.ValidatorId, dest *eth2api.ValidatorResponse) (exists bool, err error) {
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/states/%s/validator/%s", stateId.StateId(), validatorId.ValidatorId()), eth2api.Wrap(dest))
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/states/%s/validators/%s", stateId.StateId(), validatorId.ValidatorId()), eth2api.Wrap(dest))
 }
 
 // Returns filterable list of validator balances.
@@ -69,7 +69,7 @@ func StateValidatorBalances(ctx context.Context, cli eth2api.Client,
 	stateId eth2api.StateId, validatorIds []eth2api.ValidatorId, dest *[]eth2api.ValidatorBalanceResponse) (exists bool, err error) {
 	var q eth2api.Query
 	if validatorIds != nil {
-		q = eth2api.Query{"id": validatorIds}
+		q = eth2api.Query{"id": eth2api.ValidatorIdFilter(validatorIds)}
 	}
 	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtQueryGET(q, "eth/v1/beacon/states/%s/validator_balances", stateId.StateId()), eth2api.Wrap(dest))
 }
@@ -84,10 +84,10 @@ func StateValidators(ctx context.Context, cli eth2api.Client,
 	if validatorIds != nil || statusFilter != nil {
 		q = make(eth2api.Query)
 		if validatorIds != nil {
-			q["id"] = validatorIds
+			q["id"] = eth2api.ValidatorIdFilter(validatorIds)
 		}
 		if statusFilter != nil {
-			q["status"] = statusFilter
+			q["status"] = eth2api.StatusFilter(statusFilter)
 		}
 	}
 	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtQueryGET(q, "eth/v1/beacon/states/%s/validators", stateId.StateId()), eth2api.Wrap(dest))

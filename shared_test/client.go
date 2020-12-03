@@ -3,6 +3,7 @@ package shared_test
 import (
 	"bytes"
 	"context"
+	"encoding"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,18 +22,18 @@ import (
 // A test method can then selectively use them as inputs,
 // they still may be nil if they are supposed to be omitted as an optional test-input parameter.
 type Input struct {
-	ValueStateId      *string `json:"state_id,omitempty"`
-	ValueBlockId      *string `json:"block_id,omitempty"`
-	ValueValidatorId  *string `json:"validator_id,omitempty"`
-	ValueValidatorIds *string `json:"val_ids,omitempty"`
+	ValueStateId      *string  `json:"state_id,omitempty"`
+	ValueBlockId      *string  `json:"block_id,omitempty"`
+	ValueValidatorId  *string  `json:"validator_id,omitempty"`
+	ValueValidatorIds []string `json:"val_ids,omitempty"`
 
-	Slot           *beacon.Slot               `json:"slot,omitempty"`
-	Root           *beacon.Root               `json:"root,omitempty"`
-	Epoch          *beacon.Epoch              `json:"epoch,omitempty"`
-	CommitteeIndex *beacon.CommitteeIndex     `json:"committee_index,omitempty"`
-	ParentRoot     *beacon.Root               `json:"parent_root,omitempty"`
-	Block          *beacon.SignedBeaconBlock  `json:"block,omitempty"`
-	StatusFilter   []eth2api.ValidatorStatus  `json:"validator_statuses,omitempty"`
+	Slot           *beacon.Slot              `json:"slot,omitempty"`
+	Root           *beacon.Root              `json:"root,omitempty"`
+	Epoch          *beacon.Epoch             `json:"epoch,omitempty"`
+	CommitteeIndex *beacon.CommitteeIndex    `json:"committee_index,omitempty"`
+	ParentRoot     *beacon.Root              `json:"parent_root,omitempty"`
+	Block          *beacon.SignedBeaconBlock `json:"block,omitempty"`
+	StatusFilter   []eth2api.ValidatorStatus `json:"validator_statuses,omitempty"`
 	// TODO: whole list of possible inputs
 }
 
@@ -42,7 +43,8 @@ func (input *Input) StateId() eth2api.StateId {
 	}
 	v, err := eth2api.ParseStateId(*input.ValueStateId)
 	if err != nil {
-		panic(err) // invalid test resource
+		// not a valid id, but use it anyway to try get the expected error behavior.
+		return eth2api.StateIdStrMode(*input.ValueStateId)
 	}
 	return v
 }
@@ -53,22 +55,30 @@ func (input *Input) BlockId() eth2api.BlockId {
 	}
 	v, err := eth2api.ParseBlockId(*input.ValueBlockId)
 	if err != nil {
-		panic(err) // invalid test resource
+		// not a valid id, but use it anyway to try get the expected error behavior.
+		return eth2api.BlockIdStrMode(*input.ValueBlockId)
 	}
 	return v
+}
+
+type mockBadValidatorId string
+
+func (m mockBadValidatorId) ValidatorId() string {
+	return string(m)
 }
 
 func (input *Input) ValidatorIds() []eth2api.ValidatorId {
 	if input.ValueValidatorIds == nil {
 		return nil
 	}
-	ids := strings.Split(*input.ValueValidatorIds, ",")
+	ids := input.ValueValidatorIds
 	out := make([]eth2api.ValidatorId, len(ids), len(ids))
 	var err error
 	for i, id := range ids {
 		out[i], err = eth2api.ParseValidatorId(id)
 		if err != nil {
-			panic(err) // invalid test resource
+			// not a valid id, but use it anyway to try get the expected error behavior.
+			out[i] = mockBadValidatorId(*input.ValueValidatorId)
 		}
 	}
 	return out
@@ -80,7 +90,8 @@ func (input *Input) ValidatorId() eth2api.ValidatorId {
 	}
 	v, err := eth2api.ParseValidatorId(*input.ValueValidatorId)
 	if err != nil {
-		panic(err) // invalid test resource
+		// not a valid id, but use it anyway to try get the expected error behavior.
+		return mockBadValidatorId(*input.ValueValidatorId)
 	}
 	return v
 }
@@ -124,9 +135,21 @@ func (rs requestSpy) Decode(dest interface{}) (code uint, err error) {
 func (rs requestSpy) Request(ctx context.Context, req eth2api.Request) eth2api.Response {
 	p := "/" + req.Path()
 	if q := req.Query(); q != nil {
-		var b url.Values
+		b := make(url.Values)
 		for k, v := range req.Query() {
-			b.Set(k, fmt.Sprintf("%s", v))
+			if s, ok := v.(string); ok {
+				b.Set(k, s)
+			} else if sv, ok := v.(fmt.Stringer); ok {
+				b.Set(k, sv.String())
+			} else if tm, ok := v.(encoding.TextMarshaler); ok {
+				tb, err := tm.MarshalText()
+				if err != nil {
+					rs.t.Fatalf("failed to encode query key %s: %w", k, err)
+				}
+				b.Set(k, string(tb))
+			} else {
+				rs.t.Fatalf("failed to encode query key '%s': unknown type", k)
+			}
 		}
 		p += "?" + b.Encode()
 	}

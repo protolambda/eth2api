@@ -23,7 +23,7 @@ func (v ValidatorIdIndex) ValidatorId() string {
 }
 
 func ParseValidatorId(v string) (ValidatorId, error) {
-	if strings.HasPrefix("0x", v) {
+	if strings.HasPrefix(v, "0x") {
 		var pub beacon.BLSPubkey
 		if err := pub.UnmarshalText([]byte(v)); err != nil {
 			return nil, err
@@ -35,6 +35,19 @@ func ParseValidatorId(v string) (ValidatorId, error) {
 		return nil, err
 	}
 	return ValidatorIdIndex(n), nil
+}
+
+type ValidatorIdFilter []ValidatorId
+
+func (vidf ValidatorIdFilter) String() string {
+	var out strings.Builder
+	for i := range vidf {
+		out.WriteString(vidf[i].ValidatorId())
+		if i+1 < len(vidf) {
+			out.WriteRune(',')
+		}
+	}
+	return out.String()
 }
 
 type StateId interface {
@@ -67,7 +80,7 @@ const (
 )
 
 func ParseStateId(v string) (StateId, error) {
-	if strings.HasPrefix("0x", v) {
+	if strings.HasPrefix(v, "0x") {
 		var root beacon.Root
 		if err := root.UnmarshalText([]byte(v)); err != nil {
 			return nil, err
@@ -116,7 +129,7 @@ const (
 )
 
 func ParseBlockId(v string) (BlockId, error) {
-	if strings.HasPrefix("0x", v) {
+	if strings.HasPrefix(v, "0x") {
 		var root beacon.Root
 		if err := root.UnmarshalText([]byte(v)); err != nil {
 			return nil, err
@@ -132,4 +145,17 @@ func ParseBlockId(v string) (BlockId, error) {
 		return nil, err
 	}
 	return BlockIdSlot(n), nil
+}
+
+type StatusFilter []ValidatorStatus
+
+func (sf StatusFilter) String() string {
+	var out strings.Builder
+	for i := range sf {
+		out.WriteString(string(sf[i]))
+		if i+1 < len(sf) {
+			out.WriteRune(',')
+		}
+	}
+	return out.String()
 }

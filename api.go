@@ -3,6 +3,7 @@ package eth2api
 import (
 	"bytes"
 	"context"
+	"encoding"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -132,9 +133,21 @@ func (ce ClientErr) Decode(dest interface{}) (uint, error) {
 func (cli *HttpClient) Request(ctx context.Context, req Request) Response {
 	path := cli.Addr + req.Path()
 	if q := req.Query(); q != nil {
-		var b url.Values
+		b := make(url.Values)
 		for k, v := range req.Query() {
-			b.Set(k, fmt.Sprintf("%s", v))
+			if s, ok := v.(string); ok {
+				b.Set(k, s)
+			} else if sv, ok := v.(fmt.Stringer); ok {
+				b.Set(k, sv.String())
+			} else if tm, ok := v.(encoding.TextMarshaler); ok {
+				tb, err := tm.MarshalText()
+				if err != nil {
+					return ClientErr{fmt.Errorf("failed to encode query key %s: %w", k, err)}
+				}
+				b.Set(k, string(tb))
+			} else {
+				return ClientErr{fmt.Errorf("failed to encode query key '%s': unknown type", k)}
+			}
 		}
 		path += "?" + b.Encode()
 	}

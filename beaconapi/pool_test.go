@@ -37,4 +37,3 @@ func TestPoolVoluntaryExits(t *testing.T) {
 }
 
 // TODO: test the functions that submit data to the pools with POST methods
-
