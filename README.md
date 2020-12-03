@@ -2,16 +2,26 @@
 
 Fully typed API bindings, for both client and server, to implement [the standard Eth2.0 API specification](https://github.com/ethereum/eth2.0-APIs).
 
-**Work in progress, testing soon**
+**Work in progress, testing in progress**
 
 TODO:
 - [ ] Client
   - [x] Types for full API spec
   - [x] Bindings for full API spec
+      - [x] Beacon API
+      - [x] Debug API
+      - [x] Config API
+      - [x] Node API
+      - [x] Validator API
   - [x] Abstraction of requests/responses
   - [x] HTTP client implementation
+  - [ ] Testing: API Integration test-suite against test vectors (generated from Lighthouse API, verified with spec)
+    - [x] Beacon API
+    - [ ] Debug API
+    - [ ] Config API
+    - [ ] Node API
+    - [ ] Validator API
   - [ ] Tests for the util methods
-  - [ ] API Integration test-suite against Lighthouse and Teku
 - [ ] Server
   - [ ] Interfaces for serverside API
   - [ ] Abstract server that consumes above interfaces, runs API server
@@ -31,8 +41,8 @@ import (
     "net/http"
     "time"
     "github.com/protolambda/zrnt/eth2/beacon"
-	"github.com/protolambda/eth2api"
-	"github.com/protolambda/eth2api/beaconapi"
+    "github.com/protolambda/eth2api"
+    "github.com/protolambda/eth2api/beaconapi"
 )
 
 func main() {
