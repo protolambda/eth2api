@@ -35,6 +35,12 @@ type FinalityCheckpoints struct {
 	Finalized         beacon.Checkpoint `json:"finalized"`
 }
 
+type BeaconBlockHeaderAndInfo struct {
+	Root      beacon.Root                    `json:"root"`
+	Canonical bool                           `json:"canonical"`
+	Header    beacon.SignedBeaconBlockHeader `json:"header"`
+}
+
 type SyncingStatus struct {
 	// Head slot node is trying to reach
 	HeadSlot beacon.Slot `json:"head_slot"`
