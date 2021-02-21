@@ -132,7 +132,7 @@ func (rs requestSpy) Decode(dest interface{}) (code uint, err error) {
 	return eth2api.DecodeBody(rs.Code, ioutil.NopCloser(strings.NewReader(string(rs.Resp))), dest)
 }
 
-func (rs requestSpy) Request(ctx context.Context, req eth2api.Request) eth2api.Response {
+func (rs requestSpy) Request(ctx context.Context, req eth2api.PreparedRequest) eth2api.Response {
 	p := "/" + req.Path()
 	if q := req.Query(); q != nil {
 		b := make(url.Values)

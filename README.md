@@ -23,8 +23,8 @@ TODO:
     - [ ] Validator API
   - [ ] Tests for the util methods
 - [ ] Server
-  - [ ] Interfaces for serverside API
-  - [ ] Abstract server that consumes above interfaces, runs API server
+  - [ ] (WIP) Interfaces for serverside API
+  - [ ] (WIP) Abstract server that consumes above interfaces, runs API server
 
 The API design is not definite yet, current bindings are based on Eth2.0-apis commit `ceb555f9b40ff9c2094d038e9f70a19419e5b652`.
 
@@ -87,6 +87,30 @@ For now, you can:
 - Use [`protolambda/eth2-api-testgen`](https://github.com/protolambda/eth2-api-testgen) to generate test vectors.
 - Copy the `output` dir to the `tests` dir in this repo. (`cp -r ../eth2-api-testgen/output tests`)
 - Run the Go tests in this repo (`go test ./...`)
+
+## Architecture
+
+- Strictly typed client bindings that send a `PreparedRequest` via a `Client` and decode the `Response`
+- Strictly typed server routes, backed by chain/db interfaces, with handlers which take a `Request` and produce a `PreparedResponse`
+- A `Server` is a mux of routes, calling the handlers, and encoding the `PreparedResponse` to serve to the requesting client
+
+The `Client` and `Server` essentially do the encoding and transport, and are fully replaceable, without rewriting any API.
+
+```
+                                    __________________ Client __________________
+                                   |                                            |
+call binding ---PreparedRequest---> Eth2HttpClient ---http.Request--> HttpClient
+
+                          _______________________ Server _________________________
+                         |                                                        |
+create route ---Route---> Eth2HttpMux ---http.Handler---> julienschmidt/httprouter
+
+
+  ________________ Server ________________                                                     _________________ Server _______________ 
+ |                                        |                                                   |                                        |
+ ---http.Request---> Eth2HttpMux & Decoder ---Request---> route handler ---PreparedResponse---> Http server Encoder ---http.Response--->
+
+```
 
 ## How is this different from [`prysmaticlabs/ethereumapis`](https://github.com/prysmaticlabs/ethereumapis)?
 

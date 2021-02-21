@@ -1,5 +1,36 @@
 package eth2api
 
+type Headers map[string]string
+
+type PreparedResponse interface {
+	//
+	Code() uint
+	// body to encode as response, may be nil
+	Body() interface{}
+	// headers to put into the response, may be nil
+	Headers() Headers
+}
+
+func RespondBadInput(err error) PreparedResponse {
+	// TODO
+	return nil
+}
+
+func RespondNotFound(msg string) PreparedResponse {
+	// TODO
+	return nil
+}
+
+func RespondOK(data interface{}) PreparedResponse {
+	// TODO
+	return nil
+}
+
+func RespondInternalError(err error) PreparedResponse {
+	// TODO
+	return nil
+}
+
 type ApiError interface {
 	error
 	Code() uint
