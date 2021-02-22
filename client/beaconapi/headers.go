@@ -8,9 +8,6 @@ import (
 
 // Retrieves block header for given block id.
 func BlockHeader(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, dest *eth2api.BeaconBlockHeaderAndInfo) (exists bool, err error) {
-	if blockId == nil {
-		return false, eth2api.MissingRequiredParamErr
-	}
 	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/headers/%s", blockId.BlockId()), eth2api.Wrap(dest))
 }
 

@@ -2,9 +2,7 @@ package eth2api
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 )
 
 type Client interface {
@@ -113,39 +111,6 @@ type ClientFunc func(ctx context.Context, req PreparedRequest) Response
 
 func (fn ClientFunc) Request(ctx context.Context, req PreparedRequest) Response {
 	return fn(ctx, req)
-}
-
-func DecodeBody(code uint, body io.ReadCloser, dest interface{}) (codeOut uint, err error) {
-	defer body.Close()
-	codeOut = code
-	if code < 200 {
-		return code, fmt.Errorf("unexpected response status code: %d", code)
-	} else if code < 300 {
-		dec := json.NewDecoder(body)
-		return code, dec.Decode(dest)
-	} else {
-		// TODO: handle indexed errors
-
-		var ierr ErrorResponse
-		dec := json.NewDecoder(body)
-		if err := dec.Decode(&ierr); err != nil {
-			return code, ClientApiErr{fmt.Errorf("failed to decode error response with status code: %d", code)}
-		}
-		if code < 500 {
-			return code, &InvalidRequest{ierr}
-		}
-		if code == 503 {
-			return code, &CurrentlySyncing{ierr}
-		}
-		if code < 600 {
-			return code, &InternalError{ierr}
-		}
-		return code, &ierr
-	}
-	// TODO: could support more than just JSON by looking at Content-Type,
-	// and using Content-Length for fast SSZ streaming
-	// (after unwrapping the contents from the inner Data field and checking SSZ support,
-	//  and sourcing a spec from somewhere)
 }
 
 type ClientApiErr struct {

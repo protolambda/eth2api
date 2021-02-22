@@ -129,10 +129,11 @@ type requestSpy struct {
 }
 
 func (rs requestSpy) Decode(dest interface{}) (code uint, err error) {
-	return eth2api.DecodeBody(rs.Code, ioutil.NopCloser(strings.NewReader(string(rs.Resp))), dest)
+	return rs.Code, eth2api.JSONCodec{}.DecodeResponseBody(rs.Code,
+		ioutil.NopCloser(strings.NewReader(string(rs.Resp))), dest)
 }
 
-func (rs requestSpy) Request(ctx context.Context, req eth2api.PreparedRequest) eth2api.Response {
+func (rs requestSpy) Request(_ context.Context, req eth2api.PreparedRequest) eth2api.Response {
 	p := "/" + req.Path()
 	if q := req.Query(); q != nil {
 		b := make(url.Values)
@@ -144,7 +145,7 @@ func (rs requestSpy) Request(ctx context.Context, req eth2api.PreparedRequest) e
 			} else if tm, ok := v.(encoding.TextMarshaler); ok {
 				tb, err := tm.MarshalText()
 				if err != nil {
-					rs.t.Fatalf("failed to encode query key %s: %w", k, err)
+					rs.t.Fatalf("failed to encode query key %s: %v", k, err)
 				}
 				b.Set(k, string(tb))
 			} else {
@@ -159,7 +160,7 @@ func (rs requestSpy) Request(ctx context.Context, req eth2api.PreparedRequest) e
 	method := req.Method()
 	if rs.ExpectedPostBody != "" {
 		if method != eth2api.POST {
-			rs.t.Fatalf("expected POST type (enum %d), but got enum value: %d", eth2api.POST, method)
+			rs.t.Fatalf("expected POST type, but got enum value: %s", method)
 		}
 		var buf bytes.Buffer
 		enc := json.NewEncoder(&buf) // TODO: different content-types

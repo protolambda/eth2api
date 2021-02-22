@@ -15,7 +15,7 @@ type Route interface {
 type Request interface {
 	DecodeBody(dst interface{}) error
 	Param(name string) string
-	Query(name string) (value string, ok bool)
+	Query(name string) (values []string, ok bool)
 
 	// TODO: maybe expose headers?
 }
@@ -41,6 +41,5 @@ func (r *route) Handle(ctx context.Context, req Request) PreparedResponse {
 }
 
 func MakeRoute(method ReqMethod, path string, handle HandlerFn) Route {
-	// TODO: parse path segments
 	return &route{method, path, handle}
 }

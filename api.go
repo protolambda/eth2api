@@ -1,17 +1,22 @@
 package eth2api
 
 import (
-	"errors"
+	"io"
 )
 
-type ReqMethod uint
+type Codec interface {
+	EncodeResponseBody(w io.Writer, data interface{}) error
+	DecodeResponseBody(code uint, r io.ReadCloser, dest interface{}) error
+	EncodeRequestBody(w io.Writer, body interface{}) error
+	DecodeRequestBody(r io.ReadCloser, dst interface{}) error
+}
+
+type ReqMethod string
 
 const (
-	GET ReqMethod = iota
-	POST
+	GET  ReqMethod = "GET"
+	POST ReqMethod = "POST"
 )
-
-var MissingRequiredParamErr = errors.New("missing required param")
 
 // DataWrap is a util to accommodate responses which are wrapped
 // with a single field container with key "data".

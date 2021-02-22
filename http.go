@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 type HTTPClient interface {
@@ -15,8 +16,9 @@ type HTTPClient interface {
 }
 
 type Eth2HttpClient struct {
-	Addr string
-	Cli  HTTPClient
+	Addr  string
+	Cli   HTTPClient
+	Codec Codec
 }
 
 func (cli *Eth2HttpClient) Request(ctx context.Context, req PreparedRequest) Response {
@@ -51,11 +53,10 @@ func (cli *Eth2HttpClient) Request(ctx context.Context, req PreparedRequest) Res
 		if err != nil {
 			return ClientErr{fmt.Errorf("failed to execute GET request: %w", err)}
 		}
-		return (*HttpResponse)(resp)
+		return &HttpResponse{Response: resp, Codec: cli.Codec}
 	case POST:
 		var buf bytes.Buffer
-		enc := json.NewEncoder(&buf) // TODO: different content-types
-		if err := enc.Encode(req.Body()); err != nil {
+		if err := cli.Codec.EncodeRequestBody(&buf, req.Body()); err != nil {
 			return ClientErr{fmt.Errorf("failed to encode POST request body: %w", err)}
 		}
 		req, err := http.NewRequestWithContext(ctx, "POST", path, &buf)
@@ -66,20 +67,40 @@ func (cli *Eth2HttpClient) Request(ctx context.Context, req PreparedRequest) Res
 		if err != nil {
 			return ClientErr{fmt.Errorf("failed to execute POST request: %w", err)}
 		}
-		return (*HttpResponse)(resp)
+		return &HttpResponse{Response: resp, Codec: cli.Codec}
 	default:
-		return ClientErr{fmt.Errorf("unrecognized request method enum value: %d", method)}
+		return ClientErr{fmt.Errorf("unrecognized request method enum value: %s", method)}
 	}
 }
 
-type HttpResponse http.Response
+type HttpResponse struct {
+	*http.Response
+	Codec Codec
+}
 
 func (resp *HttpResponse) Decode(dest interface{}) (code uint, err error) {
-	hr := (*http.Response)(resp)
-	return DecodeBody(uint(hr.StatusCode), hr.Body, dest)
+	hr := resp.Response
+	code = uint(hr.StatusCode)
+	err = resp.Codec.DecodeResponseBody(code, hr.Body, dest)
+	return
 }
 
 type HttpRouter struct {
+	httprouter.Router
+	Codec Codec
+}
+
+func NewHttpRouter() *HttpRouter {
+	// TODO: add panic and notfound handlers
+	return &HttpRouter{
+		Router: httprouter.Router{
+			RedirectTrailingSlash:  true,
+			RedirectFixedPath:      true,
+			HandleMethodNotAllowed: true,
+			HandleOPTIONS:          true,
+		},
+		Codec: JSONCodec{},
+	}
 }
 
 var _ http.Handler = (*HttpRouter)(nil)
@@ -88,9 +109,43 @@ func (r *HttpRouter) ServeHTTP(http.ResponseWriter, *http.Request) {
 	// TODO: use the constructed router
 }
 
+type httpRequest struct {
+	req    *http.Request
+	query  url.Values
+	params httprouter.Params
+	codec  Codec
+}
+
+func (req httpRequest) DecodeBody(dst interface{}) error {
+	return req.codec.DecodeRequestBody(req.req.Body, dst)
+}
+
+func (req httpRequest) Param(name string) string {
+	return req.params.ByName(name)
+}
+
+func (req httpRequest) Query(name string) (values []string, ok bool) {
+	values, ok = req.query[name]
+	return
+}
+
 func (r *HttpRouter) AddRoute(route Route) {
-	// TODO: use julienschmidt/httprouter to mux & extract vars from route path
-	//handle := http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-	//	route.Handle()
-	//})
+	r.Router.Handle(string(route.Method()), route.Route(),
+		func(respw http.ResponseWriter, req *http.Request, params httprouter.Params) {
+			resp := route.Handle(req.Context(), httpRequest{
+				req:    req,
+				query:  req.URL.Query(),
+				params: params,
+				codec:  r.Codec,
+			})
+			h := respw.Header()
+			for k, v := range resp.Headers() {
+				h.Add(k, v)
+			}
+			respw.WriteHeader(int(resp.Code()))
+			if err := r.Codec.EncodeResponseBody(respw, resp.Body()); err != nil {
+				// TODO
+			}
+		},
+	)
 }
