@@ -21,12 +21,26 @@ func RespondNotFound(msg string) PreparedResponse {
 	return nil
 }
 
+func RespondAccepted(msg string) PreparedResponse {
+	return nil
+}
+
 func RespondOK(data interface{}) PreparedResponse {
 	// TODO
 	return nil
 }
 
+func RespondOKMsg(msg string) PreparedResponse {
+	// TODO
+	return nil
+}
+
 func RespondInternalError(err error) PreparedResponse {
+	// TODO
+	return nil
+}
+
+func RespondSyncing(msg string) PreparedResponse {
 	// TODO
 	return nil
 }
