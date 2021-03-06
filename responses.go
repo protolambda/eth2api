@@ -11,6 +11,11 @@ type PreparedResponse interface {
 	Headers() Headers
 }
 
+func RespondBadInputData(data interface{}) PreparedResponse {
+	// TODO
+	return nil
+}
+
 func RespondBadInput(err error) PreparedResponse {
 	// TODO
 	return nil

@@ -9,7 +9,7 @@ import (
 )
 
 // Serves attestations included in requested block.
-func BlockAttestations(backend BeaconBackend) eth2api.Route {
+func BlockAttestations(backend *BeaconBackend) eth2api.Route {
 	return eth2api.MakeRoute(eth2api.GET,
 		"eth/v1/beacon/blocks/:blockId/attestations",
 		func(ctx context.Context, req eth2api.Request) eth2api.PreparedResponse {
@@ -34,7 +34,7 @@ func BlockAttestations(backend BeaconBackend) eth2api.Route {
 }
 
 // Serves block details for given block id.
-func Block(backend BeaconBackend) eth2api.Route {
+func Block(backend *BeaconBackend) eth2api.Route {
 	return eth2api.MakeRoute(eth2api.GET, "eth/v1/beacon/blocks/:blockId",
 		func(ctx context.Context, req eth2api.Request) eth2api.PreparedResponse {
 			blockId, err := eth2api.ParseBlockId(req.Param("blockId"))
@@ -62,7 +62,7 @@ func Block(backend BeaconBackend) eth2api.Route {
 // and a successful response (20X, i.e. no error returned) only indicates that the broadcast has been successful.
 // The beacon node is expected to integrate the new block into its state, and therefore validate the block internally,
 // however blocks which fail the validation are still broadcast but a different status code is returned (202).
-func PublishBlock(backend BeaconBackend) eth2api.Route {
+func PublishBlock(backend *BeaconBackend) eth2api.Route {
 	return eth2api.MakeRoute(eth2api.POST, "eth/v1/beacon/blocks",
 		func(ctx context.Context, req eth2api.Request) eth2api.PreparedResponse {
 			var block beacon.SignedBeaconBlock
@@ -91,7 +91,7 @@ func PublishBlock(backend BeaconBackend) eth2api.Route {
 }
 
 // Serves hashTreeRoot of BeaconBlock/BeaconBlockHeader.
-func BlockRoot(backend BeaconBackend) eth2api.Route {
+func BlockRoot(backend *BeaconBackend) eth2api.Route {
 	return eth2api.MakeRoute(eth2api.GET, "eth/v1/beacon/blocks/:blockId",
 		func(ctx context.Context, req eth2api.Request) eth2api.PreparedResponse {
 			blockId, err := eth2api.ParseBlockId(req.Param("blockId"))

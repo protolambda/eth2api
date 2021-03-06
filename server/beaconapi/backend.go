@@ -6,17 +6,28 @@ import (
 	"github.com/protolambda/zrnt/eth2/beacon"
 	"github.com/protolambda/zrnt/eth2/chain"
 	"github.com/protolambda/zrnt/eth2/db/blocks"
+	"github.com/protolambda/zrnt/eth2/pool"
 )
 
 type Publisher interface {
 	PublishBlock(ctx context.Context, block *beacon.SignedBeaconBlock) (syncing bool, err error)
+	PublishAttestation(ctx context.Context, att *beacon.Attestation) (err error)
+	PublishAttesterSlashing(ctx context.Context, att *beacon.AttesterSlashing) (err error)
+	PublishProposerSlashing(ctx context.Context, att *beacon.ProposerSlashing) (err error)
+	PublishVoluntaryExits(ctx context.Context, att *beacon.SignedVoluntaryExit) (err error)
 }
 
 type BeaconBackend struct {
-	Spec      *beacon.Spec
-	Chain     chain.FullChain
-	BlockDB   blocks.DB
-	Publisher Publisher
+	Spec            *beacon.Spec
+	Chain           chain.FullChain
+	BlockDB         blocks.DB
+	Publisher       Publisher
+
+	// TODO move pools to interface
+	AttestationPool *pool.AttestationPool
+	AttesterSlashingPool *pool.AttesterSlashingPool
+	ProposerSlashingPool *pool.ProposerSlashingPool
+	VoluntaryExitPool *pool.VoluntaryExitPool
 }
 
 func (backend *BeaconBackend) BlockLookup(blockId eth2api.BlockId) (entry chain.ChainEntry, ok bool) {
