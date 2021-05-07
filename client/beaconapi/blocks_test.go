@@ -4,14 +4,14 @@ import (
 	"context"
 	"github.com/protolambda/eth2api"
 	"github.com/protolambda/eth2api/shared_test"
-	"github.com/protolambda/zrnt/eth2/beacon"
+	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 	"testing"
 )
 
 func TestBlockAttestations(t *testing.T) {
 	shared_test.RunAll(t, "../tests/beacon/blocks", "get_block_attestations",
 		func(ctx context.Context, input *shared_test.Input, cli eth2api.Client) error {
-			_, err := BlockAttestations(ctx, cli, input.BlockId(), new([]beacon.Attestation))
+			_, err := BlockAttestations(ctx, cli, input.BlockId(), new([]phase0.Attestation))
 			return err
 		})
 }
@@ -19,7 +19,7 @@ func TestBlockAttestations(t *testing.T) {
 func TestBlock(t *testing.T) {
 	shared_test.RunAll(t, "../tests/beacon/blocks", "get_block",
 		func(ctx context.Context, input *shared_test.Input, cli eth2api.Client) error {
-			_, err := Block(ctx, cli, input.BlockId(), new(beacon.SignedBeaconBlock))
+			_, err := Block(ctx, cli, input.BlockId(), new(phase0.SignedBeaconBlock))
 			return err
 		})
 }

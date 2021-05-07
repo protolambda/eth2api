@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/protolambda/eth2api"
-	"github.com/protolambda/zrnt/eth2/beacon"
-	"github.com/protolambda/zrnt/eth2/db/blocks"
+	"github.com/protolambda/zrnt/eth2/beacon/common"
+	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 )
 
 // Serves attestations included in requested block.
@@ -21,13 +21,17 @@ func BlockAttestations(backend *BeaconBackend) eth2api.Route {
 			if !ok {
 				return eth2api.RespondNotFound("Block not found")
 			}
-			var block beacon.SignedBeaconBlock
-			exists, err := backend.BlockDB.Get(ctx, entry.BlockRoot(), &block)
+			blockEnvelop, err := backend.BlockDB.Get(ctx, entry.BlockRoot())
 			if err != nil {
 				return eth2api.RespondInternalError(fmt.Errorf("failed to load block: %v", err))
 			}
-			if !exists {
+			if blockEnvelop == nil {
 				return eth2api.RespondNotFound("Block not found")
+			}
+			block, ok := blockEnvelop.SignedBlock.(*phase0.SignedBeaconBlock)
+			if !ok {
+				return eth2api.RespondInternalError(fmt.Errorf(
+					"only supporting attestation fetching of phase0 blocks, but got %T", blockEnvelop.SignedBlock))
 			}
 			return eth2api.RespondOK(eth2api.Wrap(block.Message.Body.Attestations))
 		})
@@ -45,15 +49,15 @@ func Block(backend *BeaconBackend) eth2api.Route {
 			if !ok {
 				return eth2api.RespondNotFound("Block not found")
 			}
-			var block beacon.SignedBeaconBlock
-			exists, err := backend.BlockDB.Get(ctx, entry.BlockRoot(), &block)
+			blockEnv, err := backend.BlockDB.Get(ctx, entry.BlockRoot())
 			if err != nil {
 				return eth2api.RespondInternalError(fmt.Errorf("failed to load block: %v", err))
 			}
-			if !exists {
+			if blockEnv == nil {
 				return eth2api.RespondNotFound("Block not found")
 			}
-			return eth2api.RespondOK(eth2api.Wrap(&block))
+			// TODO: add fork field?
+			return eth2api.RespondOK(eth2api.Wrap(blockEnv.SignedBlock))
 		})
 }
 
@@ -65,18 +69,23 @@ func Block(backend *BeaconBackend) eth2api.Route {
 func PublishBlock(backend *BeaconBackend) eth2api.Route {
 	return eth2api.MakeRoute(eth2api.POST, "eth/v1/beacon/blocks",
 		func(ctx context.Context, req eth2api.Request) eth2api.PreparedResponse {
-			var block beacon.SignedBeaconBlock
+			// TODO: support decoding alternative forks
+			var block phase0.SignedBeaconBlock
 			if err := req.DecodeBody(&block); err != nil {
 				return eth2api.RespondBadInput(err)
 			}
 
 			syncing, err := backend.Publisher.PublishBlock(ctx, &block)
+			forkDigest := common.ComputeForkDigest(
+				backend.Spec.GENESIS_FORK_VERSION,
+				backend.Chain.Genesis().ValidatorsRoot)
+			blockEnvelop := block.Envelope(backend.Spec, forkDigest)
 
 			// handle even if we cannot publish it, to keep liveness in case sync is bad.
-			if _, err2 := backend.BlockDB.Store(ctx, blocks.WithRoot(backend.Spec, &block)); err2 != nil {
+			if _, err2 := backend.BlockDB.Store(ctx, blockEnvelop); err2 != nil {
 				return eth2api.RespondInternalError(fmt.Errorf("failed to store block: %v", err2))
 			}
-			if err2 := backend.Chain.AddBlock(ctx, &block); err2 != nil {
+			if err2 := backend.Chain.AddBlock(ctx, blockEnvelop); err2 != nil {
 				return eth2api.RespondBadInput(fmt.Errorf("failed to process block: %v", err2))
 			}
 

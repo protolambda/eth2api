@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/protolambda/eth2api"
-	"github.com/protolambda/zrnt/eth2/beacon"
+	"github.com/protolambda/zrnt/eth2/beacon/common"
+	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 	"github.com/protolambda/zrnt/eth2/pool"
 	"strconv"
 )
@@ -21,7 +22,7 @@ func PoolAttestations(backend *BeaconBackend) eth2api.Route {
 				if err != nil {
 					return eth2api.RespondBadInput(err)
 				}
-				opts = append(opts, pool.WithSlot(beacon.Slot(slot)))
+				opts = append(opts, pool.WithSlot(common.Slot(slot)))
 			}
 
 			commIndexFilterVal, ok := req.Query("committee_index")
@@ -30,7 +31,7 @@ func PoolAttestations(backend *BeaconBackend) eth2api.Route {
 				if err != nil {
 					return eth2api.RespondBadInput(err)
 				}
-				opts = append(opts, pool.WithCommittee(beacon.CommitteeIndex(index)))
+				opts = append(opts, pool.WithCommittee(common.CommitteeIndex(index)))
 			}
 			atts := backend.AttestationPool.Search(opts...)
 			return eth2api.RespondOK(eth2api.Wrap(atts))
@@ -41,13 +42,13 @@ func PoolAttestations(backend *BeaconBackend) eth2api.Route {
 func PublishAttestations(backend *BeaconBackend) eth2api.Route {
 	return eth2api.MakeRoute(eth2api.POST, "eth/v1/beacon/pool/attestations",
 		func(ctx context.Context, req eth2api.Request) eth2api.PreparedResponse {
-			var atts []beacon.Attestation
+			var atts []phase0.Attestation
 			if err := req.DecodeBody(&atts); err != nil {
 				return eth2api.RespondBadInput(err)
 			}
 			// TODO: test performance. This can probably be optimized.
 			// Maybe even propagate before checking validity within own pool
-			handleAtt := func(att *beacon.Attestation) error {
+			handleAtt := func(att *phase0.Attestation) error {
 				targetSlot, err := backend.Spec.EpochStartSlot(att.Data.Target.Epoch)
 				if err != nil {
 					return err

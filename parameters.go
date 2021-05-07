@@ -1,7 +1,7 @@
 package eth2api
 
 import (
-	"github.com/protolambda/zrnt/eth2/beacon"
+	"github.com/protolambda/zrnt/eth2/beacon/common"
 	"strconv"
 	"strings"
 )
@@ -10,13 +10,13 @@ type ValidatorId interface {
 	ValidatorId() string
 }
 
-type ValidatorIdPubkey beacon.BLSPubkey
+type ValidatorIdPubkey common.BLSPubkey
 
 func (v ValidatorIdPubkey) ValidatorId() string {
-	return beacon.BLSPubkey(v).String()
+	return common.BLSPubkey(v).String()
 }
 
-type ValidatorIdIndex beacon.ValidatorIndex
+type ValidatorIdIndex common.ValidatorIndex
 
 func (v ValidatorIdIndex) ValidatorId() string {
 	return strconv.FormatUint(uint64(v), 10)
@@ -24,7 +24,7 @@ func (v ValidatorIdIndex) ValidatorId() string {
 
 func ParseValidatorId(v string) (ValidatorId, error) {
 	if strings.HasPrefix(v, "0x") {
-		var pub beacon.BLSPubkey
+		var pub common.BLSPubkey
 		if err := pub.UnmarshalText([]byte(v)); err != nil {
 			return nil, err
 		}
@@ -54,13 +54,13 @@ type StateId interface {
 	StateId() string
 }
 
-type StateIdRoot beacon.Root
+type StateIdRoot common.Root
 
 func (r StateIdRoot) StateId() string {
-	return beacon.Root(r).String()
+	return common.Root(r).String()
 }
 
-type StateIdSlot beacon.Slot
+type StateIdSlot common.Slot
 
 func (s StateIdSlot) StateId() string {
 	return strconv.FormatUint(uint64(s), 10)
@@ -81,7 +81,7 @@ const (
 
 func ParseStateId(v string) (StateId, error) {
 	if strings.HasPrefix(v, "0x") {
-		var root beacon.Root
+		var root common.Root
 		if err := root.UnmarshalText([]byte(v)); err != nil {
 			return nil, err
 		}
@@ -104,13 +104,13 @@ type BlockId interface {
 	BlockId() string
 }
 
-type BlockIdRoot beacon.Root
+type BlockIdRoot common.Root
 
 func (r BlockIdRoot) BlockId() string {
-	return beacon.Root(r).String()
+	return common.Root(r).String()
 }
 
-type BlockIdSlot beacon.Slot
+type BlockIdSlot common.Slot
 
 func (s BlockIdSlot) BlockId() string {
 	return strconv.FormatUint(uint64(s), 10)
@@ -130,7 +130,7 @@ const (
 
 func ParseBlockId(v string) (BlockId, error) {
 	if strings.HasPrefix(v, "0x") {
-		var root beacon.Root
+		var root common.Root
 		if err := root.UnmarshalText([]byte(v)); err != nil {
 			return nil, err
 		}

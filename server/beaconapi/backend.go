@@ -3,25 +3,26 @@ package beaconapi
 import (
 	"context"
 	"github.com/protolambda/eth2api"
-	"github.com/protolambda/zrnt/eth2/beacon"
-	"github.com/protolambda/zrnt/eth2/chain"
+	"github.com/protolambda/zrnt/eth2/beacon/common"
+	"github.com/protolambda/zrnt/eth2/beacon/phase0"
+	chain2 "github.com/protolambda/zrnt/eth2/chain"
 	"github.com/protolambda/zrnt/eth2/db/blocks"
 	"github.com/protolambda/zrnt/eth2/pool"
 )
 
 type Publisher interface {
-	PublishBlock(ctx context.Context, block *beacon.SignedBeaconBlock) (syncing bool, err error)
-	PublishAttestation(ctx context.Context, att *beacon.Attestation) (err error)
-	PublishAttesterSlashing(ctx context.Context, att *beacon.AttesterSlashing) (err error)
-	PublishProposerSlashing(ctx context.Context, att *beacon.ProposerSlashing) (err error)
-	PublishVoluntaryExits(ctx context.Context, att *beacon.SignedVoluntaryExit) (err error)
+	PublishBlock(ctx context.Context, block *phase0.SignedBeaconBlock) (syncing bool, err error)
+	PublishAttestation(ctx context.Context, att *phase0.Attestation) (err error)
+	PublishAttesterSlashing(ctx context.Context, att *phase0.AttesterSlashing) (err error)
+	PublishProposerSlashing(ctx context.Context, att *phase0.ProposerSlashing) (err error)
+	PublishVoluntaryExits(ctx context.Context, att *phase0.SignedVoluntaryExit) (err error)
 }
 
 type BeaconBackend struct {
-	Spec            *beacon.Spec
-	Chain           chain.FullChain
-	BlockDB         blocks.DB
-	Publisher       Publisher
+	Spec      *common.Spec
+	Chain     chain2.FullChain
+	BlockDB   blocks.DB
+	Publisher Publisher
 
 	// TODO move pools to interface
 	AttestationPool *pool.AttestationPool
@@ -30,15 +31,15 @@ type BeaconBackend struct {
 	VoluntaryExitPool *pool.VoluntaryExitPool
 }
 
-func (backend *BeaconBackend) BlockLookup(blockId eth2api.BlockId) (entry chain.ChainEntry, ok bool) {
+func (backend *BeaconBackend) BlockLookup(blockId eth2api.BlockId) (entry chain2.ChainEntry, ok bool) {
 	switch id := blockId.(type) {
 	case eth2api.BlockIdRoot:
-		return backend.Chain.ByBlock(beacon.Root(id))
+		return backend.Chain.ByBlock(common.Root(id))
 	case eth2api.BlockIdSlot:
 		// prefer a slot entry that includes the block.
-		entry, ok = backend.Chain.ByCanonStep(chain.AsStep(beacon.Slot(id), true))
+		entry, ok = backend.Chain.ByCanonStep(chain2.AsStep(common.Slot(id), true))
 		if !ok {
-			entry, ok = backend.Chain.ByCanonStep(chain.AsStep(beacon.Slot(id), false))
+			entry, ok = backend.Chain.ByCanonStep(chain2.AsStep(common.Slot(id), false))
 		}
 		return
 	case eth2api.BlockIdStrMode:
@@ -50,7 +51,7 @@ func (backend *BeaconBackend) BlockLookup(blockId eth2api.BlockId) (entry chain.
 			entry, err := backend.Chain.Finalized()
 			return entry, err == nil
 		case eth2api.BlockGenesis:
-			return backend.Chain.ByCanonStep(chain.AsStep(beacon.Slot(0), true))
+			return backend.Chain.ByCanonStep(chain2.AsStep(common.Slot(0), true))
 		default:
 			return nil, false
 		}

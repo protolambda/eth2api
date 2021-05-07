@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/protolambda/eth2api"
 	"github.com/protolambda/eth2api/shared_test"
-	"github.com/protolambda/zrnt/eth2/beacon"
+	"github.com/protolambda/zrnt/eth2/beacon/common"
 	"testing"
 )
 
@@ -28,7 +28,7 @@ func TestFinalityCheckpoints(t *testing.T) {
 func TestFork(t *testing.T) {
 	shared_test.RunAll(t, "../tests/beacon/states", "get_fork",
 		func(ctx context.Context, input *shared_test.Input, cli eth2api.Client) error {
-			_, err := Fork(ctx, cli, input.StateId(), new(beacon.Fork))
+			_, err := Fork(ctx, cli, input.StateId(), new(common.Fork))
 			return err
 		})
 }

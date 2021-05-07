@@ -8,7 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/protolambda/eth2api"
-	"github.com/protolambda/zrnt/eth2/beacon"
+	"github.com/protolambda/zrnt/eth2/beacon/common"
+	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -27,12 +28,12 @@ type Input struct {
 	ValueValidatorId  *string  `json:"validator_id,omitempty"`
 	ValueValidatorIds []string `json:"val_ids,omitempty"`
 
-	Slot           *beacon.Slot              `json:"slot,omitempty"`
-	Root           *beacon.Root              `json:"root,omitempty"`
-	Epoch          *beacon.Epoch             `json:"epoch,omitempty"`
-	CommitteeIndex *beacon.CommitteeIndex    `json:"committee_index,omitempty"`
-	ParentRoot     *beacon.Root              `json:"parent_root,omitempty"`
-	Block          *beacon.SignedBeaconBlock `json:"block,omitempty"`
+	Slot           *common.Slot              `json:"slot,omitempty"`
+	Root           *common.Root              `json:"root,omitempty"`
+	Epoch          *common.Epoch             `json:"epoch,omitempty"`
+	CommitteeIndex *common.CommitteeIndex    `json:"committee_index,omitempty"`
+	ParentRoot     *common.Root              `json:"parent_root,omitempty"`
+	Block          *phase0.SignedBeaconBlock `json:"block,omitempty"`
 	StatusFilter   []eth2api.ValidatorStatus `json:"validator_statuses,omitempty"`
 	// TODO: whole list of possible inputs
 }

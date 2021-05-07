@@ -3,13 +3,14 @@ package validatorapi
 import (
 	"context"
 	"github.com/protolambda/eth2api"
-	"github.com/protolambda/zrnt/eth2/beacon"
+	"github.com/protolambda/zrnt/eth2/beacon/common"
+	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 )
 
 // Requests that the beacon node produce an AttestationData.
 func AttestationData(ctx context.Context, cli eth2api.Client,
-	slot beacon.Slot, committeeIndex beacon.CommitteeIndex,
-	dest *beacon.AttestationData) error {
+	slot common.Slot, committeeIndex common.CommitteeIndex,
+	dest *phase0.AttestationData) error {
 	q := eth2api.Query{
 		"slot":            slot,
 		"committee_index": committeeIndex,

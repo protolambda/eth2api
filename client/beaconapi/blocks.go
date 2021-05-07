@@ -3,16 +3,17 @@ package beaconapi
 import (
 	"context"
 	"github.com/protolambda/eth2api"
-	"github.com/protolambda/zrnt/eth2/beacon"
+	"github.com/protolambda/zrnt/eth2/beacon/common"
+	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 )
 
 // Retrieves attestations included in requested block.
-func BlockAttestations(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, dest *[]beacon.Attestation) (exists bool, err error) {
+func BlockAttestations(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, dest *[]phase0.Attestation) (exists bool, err error) {
 	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/blocks/%s/attestations", blockId.BlockId()), eth2api.Wrap(dest))
 }
 
 // Retrieves block details for given block id.
-func Block(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, dest *beacon.SignedBeaconBlock) (exists bool, err error) {
+func Block(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, dest *phase0.SignedBeaconBlock) (exists bool, err error) {
 	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/blocks/%s", blockId.BlockId()), eth2api.Wrap(dest))
 }
 
@@ -22,7 +23,7 @@ func Block(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, des
 // The beacon node is expected to integrate the new block into its state, and therefore validate the block internally,
 // however blocks which fail the validation are still broadcast but a different status code is returned
 // (202, `valid` will be false)
-func PublishBlock(ctx context.Context, cli eth2api.Client, block *beacon.SignedBeaconBlock) (valid bool, err error) {
+func PublishBlock(ctx context.Context, cli eth2api.Client, block *phase0.SignedBeaconBlock) (valid bool, err error) {
 	req := eth2api.BodyPOST("eth/v1/beacon/blocks", block)
 	resp := cli.Request(ctx, req)
 	var code uint
@@ -32,7 +33,7 @@ func PublishBlock(ctx context.Context, cli eth2api.Client, block *beacon.SignedB
 }
 
 // Retrieves hashTreeRoot of BeaconBlock/BeaconBlockHeader.
-func BlockRoot(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId) (root beacon.Root, exists bool, err error) {
+func BlockRoot(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId) (root common.Root, exists bool, err error) {
 	var dest eth2api.RootResponse
 	exists, err = eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/blocks/%s/root", blockId.BlockId()), eth2api.Wrap(&dest))
 	root = dest.Root

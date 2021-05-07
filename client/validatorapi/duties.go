@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/protolambda/eth2api"
-	"github.com/protolambda/zrnt/eth2/beacon"
+	"github.com/protolambda/zrnt/eth2/beacon/common"
 )
 
 // Requests the beacon node to provide a set of attestation duties,
@@ -26,7 +26,7 @@ import (
 //
 // When syncing, it is indicated that the duties are unknown, but without error.
 func AttesterDuties(ctx context.Context, cli eth2api.Client,
-	epoch beacon.Epoch, indices []beacon.ValidatorIndex, dest *eth2api.DependentAttesterDuties) (syncing bool, err error) {
+	epoch common.Epoch, indices []common.ValidatorIndex, dest *eth2api.DependentAttesterDuties) (syncing bool, err error) {
 	req := eth2api.BodyPOST(fmt.Sprintf("eth/v1/validator/duties/attester/%d", epoch), indices)
 	resp := cli.Request(ctx, req)
 	var code uint
@@ -49,7 +49,7 @@ func AttesterDuties(ctx context.Context, cli eth2api.Client,
 // or the genesis block root in the case of underflow.
 //
 // Err will be non-nil when syncing.
-func ProposerDuties(ctx context.Context, cli eth2api.Client, epoch beacon.Epoch, dest *eth2api.DependentProposerDuty) (syncing bool, err error) {
+func ProposerDuties(ctx context.Context, cli eth2api.Client, epoch common.Epoch, dest *eth2api.DependentProposerDuty) (syncing bool, err error) {
 	req := eth2api.FmtGET("eth/v1/validator/duties/proposer/%d", epoch)
 	resp := cli.Request(ctx, req)
 	var code uint

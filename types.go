@@ -2,80 +2,81 @@ package eth2api
 
 import (
 	"fmt"
-	"github.com/protolambda/zrnt/eth2/beacon"
+	"github.com/protolambda/zrnt/eth2/beacon/common"
+	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 	"github.com/protolambda/ztyp/view"
 	"strings"
 )
 
 type GenesisResponse struct {
-	GenesisTime           beacon.Timestamp `json:"genesis_time"`
-	GenesisValidatorsRoot beacon.Root      `json:"genesis_validators_root"`
-	GenesisForkVersion    beacon.Version   `json:"genesis_fork_version"`
+	GenesisTime           common.Timestamp `json:"genesis_time"`
+	GenesisValidatorsRoot common.Root      `json:"genesis_validators_root"`
+	GenesisForkVersion    common.Version   `json:"genesis_fork_version"`
 }
 
 type DepositContractResponse struct {
 	// Id of Eth1 chain on which contract is deployed.
 	ChainID view.Uint64View `json:"chain_id"`
 	// Hex encoded deposit contract address with 0x prefix
-	Address beacon.Eth1Address `json:"address"`
+	Address common.Eth1Address `json:"address"`
 }
 
 type ChainHead struct {
-	Root beacon.Root `json:"root"`
-	Slot beacon.Slot `json:"slot"`
+	Root common.Root `json:"root"`
+	Slot common.Slot `json:"slot"`
 }
 
 type RootResponse struct {
-	Root beacon.Root `json:"root"`
+	Root common.Root `json:"root"`
 }
 
 type FinalityCheckpoints struct {
-	PreviousJustified beacon.Checkpoint `json:"previous_justified"`
-	CurrentJustified  beacon.Checkpoint `json:"current_justified"`
-	Finalized         beacon.Checkpoint `json:"finalized"`
+	PreviousJustified common.Checkpoint `json:"previous_justified"`
+	CurrentJustified  common.Checkpoint `json:"current_justified"`
+	Finalized         common.Checkpoint `json:"finalized"`
 }
 
 type BeaconBlockHeaderAndInfo struct {
-	Root      beacon.Root                    `json:"root"`
+	Root      common.Root                    `json:"root"`
 	Canonical bool                           `json:"canonical"`
-	Header    beacon.SignedBeaconBlockHeader `json:"header"`
+	Header    common.SignedBeaconBlockHeader `json:"header"`
 }
 
 type SyncingStatus struct {
 	// Head slot node is trying to reach
-	HeadSlot beacon.Slot `json:"head_slot"`
+	HeadSlot common.Slot `json:"head_slot"`
 	// How many slots node needs to process to reach head. 0 if synced.
-	SyncDistance beacon.Slot `json:"sync_distance"`
+	SyncDistance common.Slot `json:"sync_distance"`
 }
 
 // Wrapper around the original ProposerDuty response
 type DependentProposerDuty struct {
 	// Duties are valid only on the chain with this given block root
-	DependentRoot beacon.Root    `json:"dependent_root"`
+	DependentRoot common.Root    `json:"dependent_root"`
 	Data          []ProposerDuty `json:"data"`
 }
 
 type ProposerDuty struct {
-	Pubkey beacon.BLSPubkey `json:"pubkey"`
+	Pubkey common.BLSPubkey `json:"pubkey"`
 	// Index of validator in validator registry
-	ValidatorIndex beacon.ValidatorIndex `json:"validator_index"`
+	ValidatorIndex common.ValidatorIndex `json:"validator_index"`
 	// The slot at which the validator must propose block.
-	Slot beacon.Slot
+	Slot common.Slot
 }
 
 // Wrapper around the original AttesterDuty response
 type DependentAttesterDuties struct {
 	// Duties are valid only on the chain with this given block root
-	DependentRoot beacon.Root    `json:"dependent_root"`
+	DependentRoot common.Root    `json:"dependent_root"`
 	Data          []AttesterDuty `json:"data"`
 }
 
 type AttesterDuty struct {
-	Pubkey beacon.BLSPubkey `json:"pubkey"`
+	Pubkey common.BLSPubkey `json:"pubkey"`
 	// Index of validator in validator registry
-	ValidatorIndex beacon.ValidatorIndex `json:"validator_index"`
+	ValidatorIndex common.ValidatorIndex `json:"validator_index"`
 	// The committee index
-	CommitteeIndex beacon.CommitteeIndex `json:"committee_index"`
+	CommitteeIndex common.CommitteeIndex `json:"committee_index"`
 	// Number of validators in committee
 	CommitteeLength view.Uint64View `json:"committee_length"`
 	// Number of committees at the provided slot
@@ -83,16 +84,16 @@ type AttesterDuty struct {
 	// Index of validator in committee
 	ValidatorCommitteeIndex view.Uint64View `json:"validator_committee_index"`
 	// The slot at which the validator must attest.
-	Slot beacon.Slot `json:"slot"`
+	Slot common.Slot `json:"slot"`
 }
 
 type BeaconCommitteeSubscribeSignal struct {
-	ValidatorIndex beacon.ValidatorIndex `json:"validator_index"`
-	CommitteeIndex beacon.CommitteeIndex `json:"committee_index"`
+	ValidatorIndex common.ValidatorIndex `json:"validator_index"`
+	CommitteeIndex common.CommitteeIndex `json:"committee_index"`
 	// Number of committees at the returned slot
 	CommitteesAtSlot view.Uint64View `json:"committees_at_slot"`
 	// Should be slot at which validator is assigned to attest
-	Slot beacon.Slot `json:"slot"`
+	Slot common.Slot `json:"slot"`
 	// Signals to BN that a validator on the VC has been chosen for aggregator role.
 	IsAggregator view.BoolView `json:"is_aggregator"`
 }
@@ -103,21 +104,21 @@ type NodeVersionResponse struct {
 
 type ValidatorResponse struct {
 	// Index of validator in validator registry.
-	Index beacon.ValidatorIndex `json:"index"`
+	Index common.ValidatorIndex `json:"index"`
 	// Current validator balance in gwei
-	Balance beacon.Gwei `json:"balance"`
+	Balance common.Gwei `json:"balance"`
 	// TODO
 	Status ValidatorStatus `json:"status"`
 	// The validator as defined in the registry in the BeaconState
-	Validator beacon.Validator `json:"validator"`
+	Validator phase0.Validator `json:"validator"`
 }
 
 type ValidatorBalanceResponse struct {
 	// Index of validator in validator registry.
-	Index beacon.ValidatorIndex `json:"index"`
+	Index common.ValidatorIndex `json:"index"`
 
 	// Current validator balance in gwei
-	Balance beacon.Gwei `json:"balance"`
+	Balance common.Gwei `json:"balance"`
 }
 
 // TODO enum with or without additional values?
@@ -145,13 +146,13 @@ const (
 
 type Committee struct {
 	// Committee index at a slot
-	Index beacon.CommitteeIndex `json:"index"`
+	Index common.CommitteeIndex `json:"index"`
 
 	// Slot the committee performs duties on
-	Slot beacon.Slot `json:"slot"`
+	Slot common.Slot `json:"slot"`
 
 	// List of validator indices assigned to this committee
-	Validators []beacon.ValidatorIndex `json:"validators"`
+	Validators []common.ValidatorIndex `json:"validators"`
 }
 
 // Network identity data, not typed in detail,
@@ -169,7 +170,7 @@ type NetworkIdentity struct {
 	DiscoveryAddresses []string `json:"discovery_addresses"`
 
 	// Based on eth2 Metadata object
-	Metadata beacon.MetaData `json:"metadata"`
+	Metadata common.MetaData `json:"metadata"`
 }
 
 // Retrieves number of known peers.
