@@ -40,7 +40,8 @@ import (
     "github.com/protolambda/ztyp/tree"
     "net/http"
     "time"
-    "github.com/protolambda/zrnt/eth2/beacon"
+    "github.com/protolambda/zrnt/eth2/common"
+    "github.com/protolambda/zrnt/eth2/phase0"
     "github.com/protolambda/eth2api"
     "github.com/protolambda/eth2api/beaconapi"
 )
@@ -60,20 +61,19 @@ func main() {
     // e.g. cancel requests on demand if you don't need the block anymore.
     ctx, cancel := context.WithCancel(context.Background())
 
-    slot := beacon.Slot(127) // strict Eth2 types from ZRNT fully integrated
+    slot := common.Slot(127) // strict Eth2 types from ZRNT fully integrated
     // or try eth2api.BlockIdRoot(beacon.Root{0x.....}), eth2api.BlockHead, eth2api.BlockGenesis, etc. as BlockId
-    
-    // pre-alloc the block somewhere, maybe even recycle an old block.
-    var block beacon.SignedBeaconBlock
-
-    // standard errors are part of the API. When data is missing, it will be clear.
-    if exists, err := beaconapi.Block(ctx, client, eth2api.BlockIdSlot(slot), &block); !exists {
+  
+    // standard errors are part of the API.
+    if blockEnvelop, err := beaconapi.Block(ctx, client, eth2api.BlockIdSlot(slot)); blockEnvelop == nil {
         fmt.Println("block not found")
     } else if err != nil {
     	fmt.Println("failed to get block", err)
     } else {
         // Easy access to optimized Eth2 spec functions 
-        blockRoot := block.Message.HashTreeRoot(configs.Mainnet, tree.GetHashFn())
+        blockRoot := blockEnvelop.SignedBlock.(*phase0.SignedBeaconBlock).Message.HashTreeRoot(configs.Mainnet, tree.GetHashFn())
+        // Or just use the block envelop fields, the same between all Eth2 forks
+        blockRoot = blockEnvelop.BlockRoot
         fmt.Println("got block: ", blockRoot)
     }
 }
