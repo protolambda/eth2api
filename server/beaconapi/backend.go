@@ -25,10 +25,10 @@ type BeaconBackend struct {
 	Publisher Publisher
 
 	// TODO move pools to interface
-	AttestationPool *pool.AttestationPool
+	AttestationPool      *pool.AttestationPool
 	AttesterSlashingPool *pool.AttesterSlashingPool
 	ProposerSlashingPool *pool.ProposerSlashingPool
-	VoluntaryExitPool *pool.VoluntaryExitPool
+	VoluntaryExitPool    *pool.VoluntaryExitPool
 }
 
 func (backend *BeaconBackend) BlockLookup(blockId eth2api.BlockId) (entry chain2.ChainEntry, ok bool) {
