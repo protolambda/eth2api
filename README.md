@@ -40,8 +40,8 @@ import (
     "github.com/protolambda/ztyp/tree"
     "net/http"
     "time"
-    "github.com/protolambda/zrnt/eth2/common"
-    "github.com/protolambda/zrnt/eth2/phase0"
+    "github.com/protolambda/zrnt/eth2/beacon/common"
+    "github.com/protolambda/zrnt/eth2/beacon/phase0"
     "github.com/protolambda/eth2api"
     "github.com/protolambda/eth2api/beaconapi"
 )
