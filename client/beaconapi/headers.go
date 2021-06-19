@@ -8,7 +8,7 @@ import (
 
 // Retrieves block header for given block id.
 func BlockHeader(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, dest *eth2api.BeaconBlockHeaderAndInfo) (exists bool, err error) {
-	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("eth/v1/beacon/headers/%s", blockId.BlockId()), eth2api.Wrap(dest))
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("/eth/v1/beacon/headers/%s", blockId.BlockId()), eth2api.Wrap(dest))
 }
 
 // Retrieves block headers matching given query. By default it will fetch current head slot blocks.
@@ -23,5 +23,5 @@ func BlockHeaders(ctx context.Context, cli eth2api.Client, slot *common.Slot, pa
 	} else if parentRoot != nil {
 		q = eth2api.Query{"parent_root": *parentRoot}
 	}
-	return eth2api.SimpleRequest(ctx, cli, eth2api.QueryGET(q, "eth/v1/beacon/headers"), eth2api.Wrap(dest))
+	return eth2api.SimpleRequest(ctx, cli, eth2api.QueryGET(q, "/eth/v1/beacon/headers"), eth2api.Wrap(dest))
 }

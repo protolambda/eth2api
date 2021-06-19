@@ -18,7 +18,7 @@ func ProduceBlock(ctx context.Context, cli eth2api.Client,
 	if graffiti != nil {
 		q["graffiti"] = graffiti
 	}
-	req := eth2api.FmtQueryGET(q, "eth/v1/validator/blocks/%d", slot)
+	req := eth2api.FmtQueryGET(q, "/eth/v1/validator/blocks/%d", slot)
 	resp := cli.Request(ctx, req)
 	var code uint
 	code, err = resp.Decode(eth2api.Wrap(dest))

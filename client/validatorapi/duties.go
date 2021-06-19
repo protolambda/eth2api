@@ -27,7 +27,7 @@ import (
 // When syncing, it is indicated that the duties are unknown, but without error.
 func AttesterDuties(ctx context.Context, cli eth2api.Client,
 	epoch common.Epoch, indices []common.ValidatorIndex, dest *eth2api.DependentAttesterDuties) (syncing bool, err error) {
-	req := eth2api.BodyPOST(fmt.Sprintf("eth/v1/validator/duties/attester/%d", epoch), indices)
+	req := eth2api.BodyPOST(fmt.Sprintf("/eth/v1/validator/duties/attester/%d", epoch), indices)
 	resp := cli.Request(ctx, req)
 	var code uint
 	code, err = resp.Decode(dest) // not wrapped, the request type already breaks the `data` boundary
@@ -50,7 +50,7 @@ func AttesterDuties(ctx context.Context, cli eth2api.Client,
 //
 // Err will be non-nil when syncing.
 func ProposerDuties(ctx context.Context, cli eth2api.Client, epoch common.Epoch, dest *eth2api.DependentProposerDuty) (syncing bool, err error) {
-	req := eth2api.FmtGET("eth/v1/validator/duties/proposer/%d", epoch)
+	req := eth2api.FmtGET("/eth/v1/validator/duties/proposer/%d", epoch)
 	resp := cli.Request(ctx, req)
 	var code uint
 	code, err = resp.Decode(dest) // not wrapped, the request type already breaks the `data` boundary

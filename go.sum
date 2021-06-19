@@ -15,10 +15,13 @@ github.com/minio/sha256-simd v1.0.0/go.mod h1:OuYzVNI5vcoYIAmbIvHPl3N3jUzVedXbKy
 github.com/protolambda/messagediff v1.4.0/go.mod h1:LboJp0EwIbJsePYpzh5Op/9G1/4mIztMRYzzwR0dR2M=
 github.com/protolambda/zrnt v0.15.1 h1:AuF2XFqvktmbABkswEvurAyvHRNaJsTSeFvx+5K6Jhw=
 github.com/protolambda/zrnt v0.15.1/go.mod h1:99Kf8o4zIhSwx/G05jcnoxWdA9GalyofmmennKbsKBk=
+github.com/protolambda/zrnt v0.16.4 h1:iWiGhw/Tb+05hT5BV+gcFEEwzs+UwJrpHUrZMEqb9CI=
+github.com/protolambda/zrnt v0.16.4/go.mod h1:7fOYOhf5hndcnevKwUuUI8Ruj5t0dauywgHj4CXlDgA=
 github.com/protolambda/ztyp v0.1.2 h1:wT8ansBvtUR48bKgo3ZraXWUKNfds0kabBIWyo9zGvA=
 github.com/protolambda/ztyp v0.1.2/go.mod h1:u9yT4ioIokwlHrOfiZ52ezHfKdza3phxhTJix01vGgU=
 github.com/protolambda/ztyp v0.1.4 h1:Kxn8W4ncsCs4ha27PRfyMLKRrfJkPdZYw4UV9yKqbw8=
 github.com/protolambda/ztyp v0.1.4/go.mod h1:u9yT4ioIokwlHrOfiZ52ezHfKdza3phxhTJix01vGgU=
+github.com/protolambda/ztyp v0.1.8/go.mod h1:u9yT4ioIokwlHrOfiZ52ezHfKdza3phxhTJix01vGgU=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 h1:tQIYjPdBoyREyB9XMu+nnTclpTYkz2zFM+lzLJFO4gQ=
