@@ -17,6 +17,11 @@ func Block(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, des
 	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("/eth/v1/beacon/blocks/%s", blockId.BlockId()), eth2api.Wrap(dest))
 }
 
+// Retrieves block details for given block id.
+func BlockV2(ctx context.Context, cli eth2api.Client, blockId eth2api.BlockId, dest *eth2api.VersionedSignedBeaconBlock) (exists bool, err error) {
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtGET("/eth/v2/beacon/blocks/%s", blockId.BlockId()), dest)
+}
+
 // Instructs the beacon node to broadcast a newly signed beacon block to the beacon network,
 // to be included in the beacon chain. The beacon node is not required to validate the signed `BeaconBlock`,
 // and a successful response (20X, i.e. no error returned) only indicates that the broadcast has been successful.

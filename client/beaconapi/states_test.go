@@ -17,6 +17,8 @@ func TestEpochCommittees(t *testing.T) {
 		})
 }
 
+// TODO TestSyncCommittees
+
 func TestFinalityCheckpoints(t *testing.T) {
 	shared_test.RunAll(t, "../tests/beacon/states", "get_finality_checkpoints",
 		func(ctx context.Context, input *shared_test.Input, cli eth2api.Client) error {

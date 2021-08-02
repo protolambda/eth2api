@@ -34,6 +34,19 @@ func EpochCommittees(ctx context.Context, cli eth2api.Client,
 	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtQueryGET(q, "/eth/v1/beacon/states/%s/committees", stateId.StateId()), eth2api.Wrap(dest))
 }
 
+// Retrieves the sync committees for the given state. Optionally by epoch (defaults to epoch current to the state).
+func SyncCommittees(ctx context.Context, cli eth2api.Client, stateId eth2api.StateId,
+	epoch *common.Epoch, dest *eth2api.SyncCommittees) (exists bool, err error) {
+	var q eth2api.Query
+	if epoch != nil {
+		q = make(eth2api.Query)
+		if epoch != nil {
+			q["epoch"] = *epoch
+		}
+	}
+	return eth2api.SimpleRequest(ctx, cli, eth2api.FmtQueryGET(q, "/eth/v1/beacon/states/%s/sync_committees", stateId.StateId()), eth2api.Wrap(dest))
+}
+
 // Returns finality checkpoints for state with given 'stateId'.
 // In case finality is not yet achieved, checkpoint should return epoch 0 and ZERO_HASH as root.
 func FinalityCheckpoints(ctx context.Context, cli eth2api.Client,

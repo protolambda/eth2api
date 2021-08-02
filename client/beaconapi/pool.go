@@ -3,6 +3,7 @@ package beaconapi
 import (
 	"context"
 	"github.com/protolambda/eth2api"
+	"github.com/protolambda/zrnt/eth2/beacon/altair"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
 	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 )
@@ -68,4 +69,15 @@ func PoolVoluntaryExits(ctx context.Context, cli eth2api.Client, dest *[]phase0.
 // Submits SignedVoluntaryExit object to node's pool and if passes validation node MUST broadcast it to network.
 func SubmitVoluntaryExit(ctx context.Context, cli eth2api.Client, exit *phase0.SignedVoluntaryExit) error {
 	return eth2api.MinimalRequest(ctx, cli, eth2api.BodyPOST("/eth/v1/beacon/pool/voluntary_exits", exit), nil)
+}
+
+// TODO: the API does not have a method to view the pool of sync-committee messages
+
+// Submits sync committee signature objects to the node.
+//
+// If a sync committee signature is validated successfully the node MUST publish that sync committee signature on all applicable subnets.
+//
+// If one or more sync committee signatures fail validation the node MUST return a 400 error with details of which sync committee signatures have failed, and why.
+func SubmitSyncCommitteeMessages(ctx context.Context, cli eth2api.Client, messages []altair.SyncCommitteeMessage) error {
+	return eth2api.MinimalRequest(ctx, cli, eth2api.BodyPOST("/eth/v1/beacon/pool/sync_committees", messages), nil)
 }

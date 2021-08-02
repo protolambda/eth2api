@@ -24,7 +24,7 @@ import (
 // The dependent_root value is `get_block_root_at_slot(state, compute_start_slot_at_epoch(epoch - 1) - 1)`
 // or the genesis block root in the case of underflow.
 //
-// When syncing, it is indicated that the duties are unknown, but without error.
+// Err will be non-nil when syncing.
 func AttesterDuties(ctx context.Context, cli eth2api.Client,
 	epoch common.Epoch, indices []common.ValidatorIndex, dest *eth2api.DependentAttesterDuties) (syncing bool, err error) {
 	req := eth2api.BodyPOST(fmt.Sprintf("/eth/v1/validator/duties/attester/%d", epoch), indices)
@@ -54,6 +54,17 @@ func ProposerDuties(ctx context.Context, cli eth2api.Client, epoch common.Epoch,
 	resp := cli.Request(ctx, req)
 	var code uint
 	code, err = resp.Decode(dest) // not wrapped, the request type already breaks the `data` boundary
+	syncing = code == 503
+	return
+}
+
+// Requests the beacon node to provide a set of sync committee duties for a particular epoch.
+func SyncCommitteeDuties(ctx context.Context, cli eth2api.Client,
+	epoch common.Epoch, indices []common.ValidatorIndex, dest *[]eth2api.SyncCommitteeDuty) (syncing bool, err error) {
+	req := eth2api.BodyPOST(fmt.Sprintf("/eth/v1/validator/duties/sync/%d", epoch), indices)
+	resp := cli.Request(ctx, req)
+	var code uint
+	code, err = resp.Decode(eth2api.Wrap(dest))
 	syncing = code == 503
 	return
 }

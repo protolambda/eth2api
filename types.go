@@ -1,9 +1,15 @@
 package eth2api
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"github.com/protolambda/zrnt/eth2/beacon/altair"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
+	"github.com/protolambda/zrnt/eth2/beacon/merge"
 	"github.com/protolambda/zrnt/eth2/beacon/phase0"
+	"github.com/protolambda/zrnt/eth2/beacon/sharding"
+	"github.com/protolambda/ztyp/codec"
 	"github.com/protolambda/ztyp/view"
 	"strings"
 )
@@ -64,6 +70,12 @@ type ProposerDuty struct {
 	Slot common.Slot
 }
 
+type SyncCommitteeDuty struct {
+	Pubkey                        common.BLSPubkey      `json:"pubkey"`
+	ValidatorIndex                common.ValidatorIndex `json:"validator_index"`
+	ValidatorSyncCommitteeIndices []view.Uint64View     `json:"validator_sync_committee_indices"`
+}
+
 // Wrapper around the original AttesterDuty response
 type DependentAttesterDuties struct {
 	// Duties are valid only on the chain with this given block root
@@ -96,6 +108,13 @@ type BeaconCommitteeSubscribeSignal struct {
 	Slot common.Slot `json:"slot"`
 	// Signals to BN that a validator on the VC has been chosen for aggregator role.
 	IsAggregator view.BoolView `json:"is_aggregator"`
+}
+
+type SyncCommitteeSubscribeSignal struct {
+	ValidatorIndex common.ValidatorIndex `json:"validator_index"`
+	// positions of the validator-index relative to the complete sync committee (a validator can have multiple)
+	SyncCommitteeIndices []view.Uint64View `json:"sync_committee_indices"`
+	UntilEpoch           common.Epoch      `json:"until_epoch"`
 }
 
 type NodeVersionResponse struct {
@@ -153,6 +172,158 @@ type Committee struct {
 
 	// List of validator indices assigned to this committee
 	Validators []common.ValidatorIndex `json:"validators"`
+}
+
+type SyncCommittees struct {
+	// All of the validator indices in the current sync committee
+	Validators []common.ValidatorIndex `json:"validators"`
+	// Subcommittee slices of the current sync committee
+	ValidatorAggregates [][]common.ValidatorIndex `json:"validator_aggregates"`
+}
+
+type versionStruct struct {
+	Version string `json:"version"`
+}
+
+type blockDataStruct struct {
+	Data common.SpecObj `json:"data"`
+}
+
+type VersionedBeaconBlock struct {
+	Version string `json:"version"`
+	// Data is *phase0.BeaconBlock, *altair.BeaconBlock,
+	// *merge.BeaconBlock or *sharding.BeaconBlock.
+	Data common.SpecObj `json:"data"`
+}
+
+func (v *VersionedBeaconBlock) UnmarshalJSON(b []byte) error {
+	var version versionStruct
+	if err := json.Unmarshal(b, &version); err != nil {
+		return err
+	}
+	var data blockDataStruct
+	switch version.Version {
+	case "phase0":
+		data.Data = new(phase0.BeaconBlock)
+	case "altair":
+		data.Data = new(altair.BeaconBlock)
+	case "merge":
+		data.Data = new(merge.BeaconBlock)
+	case "sharding":
+		data.Data = new(sharding.BeaconBlock)
+	default:
+		return fmt.Errorf("unrecognized version: %q", version.Version)
+	}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	v.Data = data.Data
+	v.Version = version.Version
+	return nil
+}
+
+type SignedBeaconBlock interface {
+	common.SpecObj
+	common.EnvelopeBuilder
+}
+
+type signedBlockDataStruct struct {
+	Data SignedBeaconBlock `json:"data"`
+}
+
+type VersionedSignedBeaconBlock struct {
+	Version string `json:"version"`
+	// Data is *phase0.SignedBeaconBlock, *altair.SignedBeaconBlock,
+	// *merge.SignedBeaconBlock or *sharding.SignedBeaconBlock.
+	Data SignedBeaconBlock `json:"data"`
+}
+
+func (v *VersionedSignedBeaconBlock) UnmarshalJSON(b []byte) error {
+	var version versionStruct
+	if err := json.Unmarshal(b, &version); err != nil {
+		return err
+	}
+	var data signedBlockDataStruct
+	switch version.Version {
+	case "phase0":
+		data.Data = new(phase0.SignedBeaconBlock)
+	case "altair":
+		data.Data = new(altair.SignedBeaconBlock)
+	case "merge":
+		data.Data = new(merge.SignedBeaconBlock)
+	case "sharding":
+		data.Data = new(sharding.SignedBeaconBlock)
+	default:
+		return fmt.Errorf("unrecognized version: %q", version.Version)
+	}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	v.Data = data.Data
+	v.Version = version.Version
+	return nil
+}
+
+type stateDataStruct struct {
+	Data common.SpecObj `json:"data"`
+}
+
+type VersionedBeaconState struct {
+	Version string `json:"version"`
+	// Data is *phase0.BeaconState, *altair.BeaconState, *merge.BeaconState or *sharding.BeaconState.
+	// See the Tree(spec) method to transform into a binary-tree backed state for advanced processing.
+	Data common.SpecObj `json:"data"`
+}
+
+func (v *VersionedBeaconState) Tree(spec *common.Spec) (common.BeaconState, error) {
+	if v.Data == nil {
+		return nil, fmt.Errorf("no state (version: %q)", v.Version)
+	}
+	var buf bytes.Buffer
+	w := codec.NewEncodingWriter(&buf)
+	if err := v.Data.Serialize(spec, w); err != nil {
+		return nil, err
+	}
+	data := buf.Bytes()
+	r := codec.NewDecodingReader(bytes.NewReader(data), uint64(len(data)))
+	switch v.Version {
+	case "phase0":
+		return phase0.AsBeaconStateView(phase0.BeaconStateType(spec).Deserialize(r))
+	case "altair":
+		return altair.AsBeaconStateView(altair.BeaconStateType(spec).Deserialize(r))
+	case "merge":
+		return merge.AsBeaconStateView(merge.BeaconStateType(spec).Deserialize(r))
+	case "sharding":
+		return sharding.AsBeaconStateView(sharding.BeaconStateType(spec).Deserialize(r))
+	default:
+		return nil, fmt.Errorf("unrecognized version: %q", v.Version)
+	}
+}
+
+func (v *VersionedBeaconState) UnmarshalJSON(b []byte) error {
+	var version versionStruct
+	if err := json.Unmarshal(b, &version); err != nil {
+		return err
+	}
+	var data stateDataStruct
+	switch version.Version {
+	case "phase0":
+		data.Data = new(phase0.BeaconState)
+	case "altair":
+		data.Data = new(altair.BeaconState)
+	case "merge":
+		data.Data = new(merge.BeaconState)
+	case "sharding":
+		data.Data = new(sharding.BeaconState)
+	default:
+		return fmt.Errorf("unrecognized version: %q", version.Version)
+	}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	v.Data = data.Data
+	v.Version = version.Version
+	return nil
 }
 
 // Network identity data, not typed in detail,

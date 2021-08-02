@@ -24,6 +24,8 @@ func TestBlock(t *testing.T) {
 		})
 }
 
+// TODO TestBlockV2
+
 func TestBlockRoot(t *testing.T) {
 	shared_test.RunAll(t, "../tests/beacon/blocks", "get_block_root",
 		func(ctx context.Context, input *shared_test.Input, cli eth2api.Client) error {
