@@ -3,6 +3,7 @@ package beaconapi
 import (
 	"context"
 	"github.com/protolambda/eth2api"
+	"github.com/protolambda/zrnt/eth2/beacon"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
 	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 	chain2 "github.com/protolambda/zrnt/eth2/chain"
@@ -11,7 +12,7 @@ import (
 )
 
 type Publisher interface {
-	PublishBlock(ctx context.Context, block *phase0.SignedBeaconBlock) (syncing bool, err error)
+	PublishBlock(ctx context.Context, block *common.BeaconBlockEnvelope) (syncing bool, err error)
 	PublishAttestation(ctx context.Context, att *phase0.Attestation) (err error)
 	PublishAttesterSlashing(ctx context.Context, att *phase0.AttesterSlashing) (err error)
 	PublishProposerSlashing(ctx context.Context, att *phase0.ProposerSlashing) (err error)
@@ -24,6 +25,7 @@ type BeaconBackend struct {
 	BlockDB   blocks.DB
 	Publisher Publisher
 
+	ForkDecoder *beacon.ForkDecoder
 	// TODO move pools to interface
 	AttestationPool      *pool.AttestationPool
 	AttesterSlashingPool *pool.AttesterSlashingPool

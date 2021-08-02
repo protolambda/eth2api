@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/protolambda/zrnt/eth2/beacon"
 	"github.com/protolambda/zrnt/eth2/beacon/altair"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
 	"github.com/protolambda/zrnt/eth2/beacon/merge"
@@ -223,8 +224,7 @@ func (v *VersionedBeaconBlock) UnmarshalJSON(b []byte) error {
 }
 
 type SignedBeaconBlock interface {
-	common.SpecObj
-	common.EnvelopeBuilder
+	beacon.OpaqueBlock
 }
 
 type signedBlockDataStruct struct {

@@ -2,6 +2,7 @@ package beaconapi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/protolambda/eth2api"
 	"github.com/protolambda/zrnt/eth2/beacon/altair"
@@ -99,6 +100,40 @@ func Blockv2(backend *BeaconBackend) eth2api.Route {
 		})
 }
 
+type slotDecodeLookahead struct {
+	Message struct {
+		Slot common.Slot `json:"slot"`
+	} `json:"message"`
+}
+
+type slotHack struct {
+	backend *BeaconBackend
+	dest    *common.BeaconBlockEnvelope
+}
+
+func (h *slotHack) UnmarshalJSON(b []byte) error {
+	var slotData slotDecodeLookahead
+	if err := json.Unmarshal(b, slotData); err != nil {
+		return err
+	}
+
+	forkDigest := common.ComputeForkDigest(
+		h.backend.ForkDecoder.Spec.ForkVersion(slotData.Message.Slot),
+		h.backend.Chain.Genesis().ValidatorsRoot)
+
+	dest, err := h.backend.ForkDecoder.AllocBlock(forkDigest)
+	if err != nil {
+		return fmt.Errorf("unrecognized fork: %v", err)
+	}
+
+	if err := json.Unmarshal(b, dest); err != nil {
+		return err
+	}
+
+	h.dest = dest.Envelope(h.backend.Spec, forkDigest)
+	return nil
+}
+
 // Instructs the beacon node to broadcast a newly signed beacon block to the beacon network,
 // to be included in the beacon chain. The beacon node is not required to validate the signed `BeaconBlock`,
 // and a successful response (20X, i.e. no error returned) only indicates that the broadcast has been successful.
@@ -107,17 +142,12 @@ func Blockv2(backend *BeaconBackend) eth2api.Route {
 func PublishBlock(backend *BeaconBackend) eth2api.Route {
 	return eth2api.MakeRoute(eth2api.POST, "/eth/v1/beacon/blocks",
 		func(ctx context.Context, req eth2api.Request) eth2api.PreparedResponse {
-			// TODO: support decoding alternative forks
-			var block phase0.SignedBeaconBlock
+			var block slotHack
 			if err := req.DecodeBody(&block); err != nil {
 				return eth2api.RespondBadInput(err)
 			}
-
-			syncing, err := backend.Publisher.PublishBlock(ctx, &block)
-			forkDigest := common.ComputeForkDigest(
-				backend.Spec.GENESIS_FORK_VERSION,
-				backend.Chain.Genesis().ValidatorsRoot)
-			blockEnvelop := block.Envelope(backend.Spec, forkDigest)
+			blockEnvelop := block.dest
+			syncing, err := backend.Publisher.PublishBlock(ctx, blockEnvelop)
 
 			// handle even if we cannot publish it, to keep liveness in case sync is bad.
 			if _, err2 := backend.BlockDB.Store(ctx, blockEnvelop); err2 != nil {
