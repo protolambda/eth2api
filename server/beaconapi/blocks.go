@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/protolambda/eth2api"
+	"github.com/protolambda/zrnt/eth2/beacon/altair"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
+	"github.com/protolambda/zrnt/eth2/beacon/merge"
 	"github.com/protolambda/zrnt/eth2/beacon/phase0"
+	"github.com/protolambda/zrnt/eth2/beacon/sharding"
 )
 
 // Serves attestations included in requested block.
@@ -37,7 +40,7 @@ func BlockAttestations(backend *BeaconBackend) eth2api.Route {
 		})
 }
 
-// Serves block details for given block id.
+// Serves phase0 block details for given block id.
 func Block(backend *BeaconBackend) eth2api.Route {
 	return eth2api.MakeRoute(eth2api.GET, "/eth/v1/beacon/blocks/:blockId",
 		func(ctx context.Context, req eth2api.Request) eth2api.PreparedResponse {
@@ -56,8 +59,43 @@ func Block(backend *BeaconBackend) eth2api.Route {
 			if blockEnv == nil {
 				return eth2api.RespondNotFound("Block not found")
 			}
-			// TODO: add fork field?
 			return eth2api.RespondOK(eth2api.Wrap(blockEnv.SignedBlock))
+		})
+}
+
+// Serves versioned block details for given block id.
+func Blockv2(backend *BeaconBackend) eth2api.Route {
+	return eth2api.MakeRoute(eth2api.GET, "/eth/v2/beacon/blocks/:blockId",
+		func(ctx context.Context, req eth2api.Request) eth2api.PreparedResponse {
+			blockId, err := eth2api.ParseBlockId(req.Param("blockId"))
+			if err != nil {
+				return eth2api.RespondBadInput(err)
+			}
+			entry, ok := backend.BlockLookup(blockId)
+			if !ok {
+				return eth2api.RespondNotFound("Block not found")
+			}
+			blockEnv, err := backend.BlockDB.Get(ctx, entry.BlockRoot())
+			if err != nil {
+				return eth2api.RespondInternalError(fmt.Errorf("failed to load block: %v", err))
+			}
+			if blockEnv == nil {
+				return eth2api.RespondNotFound("Block not found")
+			}
+			var version string
+			switch blockEnv.SignedBlock.(type) {
+			case *phase0.SignedBeaconBlock:
+				version = "phase0"
+			case *altair.SignedBeaconBlock:
+				version = "altair"
+			case *merge.SignedBeaconBlock:
+				version = "merge"
+			case *sharding.SignedBeaconBlock:
+				version = "sharding"
+			default:
+				return eth2api.RespondInternalError(fmt.Errorf("unknown block type %T", blockEnv.SignedBlock))
+			}
+			return eth2api.RespondOK(&eth2api.VersionedBeaconBlock{Version: version, Data: blockEnv.SignedBlock})
 		})
 }
 
