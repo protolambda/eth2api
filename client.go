@@ -82,11 +82,11 @@ func FmtGET(format string, data ...interface{}) PreparedRequest {
 }
 
 func QueryGET(query Query, path string) PreparedRequest {
-	return &fullReq{method: POST, path: path, body: nil, query: query}
+	return &fullReq{method: GET, path: path, body: nil, query: query}
 }
 
 func FmtQueryGET(query Query, format string, data ...interface{}) PreparedRequest {
-	return &fullReq{method: POST, path: fmt.Sprintf(format, data...), body: nil, query: query}
+	return &fullReq{method: GET, path: fmt.Sprintf(format, data...), body: nil, query: query}
 }
 
 func BodyPOST(path string, body interface{}) PreparedRequest {
