@@ -34,48 +34,74 @@ The API design is not definite yet, current bindings are based on Eth2.0-apis co
 package main
 
 import (
-    "context"
-    "fmt"
-    "github.com/protolambda/zrnt/eth2/configs"
-    "github.com/protolambda/ztyp/tree"
-    "net/http"
-    "time"
-    "github.com/protolambda/zrnt/eth2/beacon/common"
-    "github.com/protolambda/zrnt/eth2/beacon/phase0"
-    "github.com/protolambda/eth2api"
-    "github.com/protolambda/eth2api/beaconapi"
+	"context"
+	"fmt"
+	"github.com/protolambda/eth2api"
+	"github.com/protolambda/eth2api/client/beaconapi"
+	"github.com/protolambda/zrnt/eth2/beacon/common"
+	"github.com/protolambda/zrnt/eth2/configs"
+	"net/http"
+	"os"
+	"time"
 )
 
 func main() {
-    // Make an HTTP client (reuse connections!)
-    client := &eth2api.HttpClient{
-        Addr: "http://localhost:5052",
-        Cli: &http.Client{
-            Transport: &http.Transport{
-                MaxIdleConnsPerHost: 123,
-            },
-            Timeout: 10 * time.Second,
-        },
-    }
+	// Make an HTTP client (reuse connections!)
+	client := &eth2api.Eth2HttpClient{
+		Addr: "http://localhost:5052",
+		Cli: &http.Client{
+			Transport: &http.Transport{
+				MaxIdleConnsPerHost: 123,
+			},
+			Timeout: 10 * time.Second,
+		},
+	  Codec: eth2api.JSONCodec{},
+	}
 
-    // e.g. cancel requests on demand if you don't need the block anymore.
-    ctx, cancel := context.WithCancel(context.Background())
 
-    slot := common.Slot(127) // strict Eth2 types from ZRNT fully integrated
-    // or try eth2api.BlockIdRoot(beacon.Root{0x.....}), eth2api.BlockHead, eth2api.BlockGenesis, etc. as BlockId
-  
-    // standard errors are part of the API.
-    if blockEnvelop, err := beaconapi.Block(ctx, client, eth2api.BlockIdSlot(slot)); blockEnvelop == nil {
-        fmt.Println("block not found")
-    } else if err != nil {
-    	fmt.Println("failed to get block", err)
-    } else {
-        // Easy access to optimized Eth2 spec functions 
-        blockRoot := blockEnvelop.SignedBlock.(*phase0.SignedBeaconBlock).Message.HashTreeRoot(configs.Mainnet, tree.GetHashFn())
-        // Or just use the block envelop fields, the same between all Eth2 forks
-        blockRoot = blockEnvelop.BlockRoot
-        fmt.Println("got block: ", blockRoot)
-    }
+	//// e.g. cancel requests with a context.WithTimeout/WithCancel/WithDeadline
+	ctx := context.Background()
+
+	var genesis eth2api.GenesisResponse
+	if exists, err := beaconapi.Genesis(ctx, client, &genesis); !exists {
+		fmt.Println("chain did not start yet")
+		os.Exit(1)
+	} else if err != nil {
+		fmt.Println("failed to get genesis", err)
+		os.Exit(1)
+	}
+	spec := configs.Mainnet
+	// or load testnet config info from a YAML file
+	// yaml.Unmarshal(data, &spec.Config)
+
+	// every fork has a digest. Blocks are versioned by name in the API,
+	// but wrapped with digest info in ZRNT to do enable different kinds of processing
+	altairForkDigest := common.ComputeForkDigest(spec.ALTAIR_FORK_VERSION, genesis.GenesisValidatorsRoot)
+
+
+	id := eth2api.BlockHead
+	// or try other block ID types:
+	// eth2api.BlockIdSlot(common.Slot(12345))
+	// eth2api.BlockIdRoot(common.Root{0x.....})
+	// eth2api.BlockGenesis
+
+	// standard errors are part of the API.
+	var versionedBlock eth2api.VersionedSignedBeaconBlock
+	if exists, err := beaconapi.BlockV2(ctx, client, id, &versionedBlock); !exists {
+		fmt.Println("block not found")
+		os.Exit(1)
+	} else if err != nil {
+		fmt.Println("failed to get block", err)
+		os.Exit(1)
+	} else {
+		fmt.Println("block version:", versionedBlock.Version)
+		// get the block (any fork)
+		fmt.Printf("data: %v\n", versionedBlock.Data)
+
+		// add digest:
+		envelope := versionedBlock.Data.Envelope(spec, altairForkDigest)
+		fmt.Println("got block:", envelope.BlockRoot)
+	}
 }
 ```
 
