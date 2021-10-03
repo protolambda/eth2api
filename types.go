@@ -203,7 +203,7 @@ func (v *VersionedBeaconBlock) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	var data blockDataStruct
-	switch version.Version {
+	switch strings.ToLower(v.Version) {
 	case "phase0":
 		data.Data = new(phase0.BeaconBlock)
 	case "altair":
@@ -244,7 +244,7 @@ func (v *VersionedSignedBeaconBlock) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	var data signedBlockDataStruct
-	switch version.Version {
+	switch strings.ToLower(version.Version) {
 	case "phase0":
 		data.Data = new(phase0.SignedBeaconBlock)
 	case "altair":
@@ -286,7 +286,7 @@ func (v *VersionedBeaconState) Tree(spec *common.Spec) (common.BeaconState, erro
 	}
 	data := buf.Bytes()
 	r := codec.NewDecodingReader(bytes.NewReader(data), uint64(len(data)))
-	switch v.Version {
+	switch strings.ToLower(v.Version) {
 	case "phase0":
 		return phase0.AsBeaconStateView(phase0.BeaconStateType(spec).Deserialize(r))
 	case "altair":
@@ -306,7 +306,7 @@ func (v *VersionedBeaconState) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	var data stateDataStruct
-	switch version.Version {
+	switch strings.ToLower(v.Version) {
 	case "phase0":
 		data.Data = new(phase0.BeaconState)
 	case "altair":
