@@ -6,6 +6,6 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/klauspost/cpuid/v2 v2.0.6 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
-	github.com/protolambda/zrnt v0.19.0
+	github.com/protolambda/zrnt v0.23.0
 	github.com/protolambda/ztyp v0.1.9
 )
