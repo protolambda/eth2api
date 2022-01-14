@@ -306,7 +306,7 @@ func (v *VersionedBeaconState) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	var data stateDataStruct
-	switch strings.ToLower(v.Version) {
+	switch strings.ToLower(version.Version) {
 	case "phase0":
 		data.Data = new(phase0.BeaconState)
 	case "altair":
