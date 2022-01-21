@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/protolambda/eth2api"
 	"github.com/protolambda/zrnt/eth2/beacon/altair"
+	"github.com/protolambda/zrnt/eth2/beacon/bellatrix"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
-	"github.com/protolambda/zrnt/eth2/beacon/merge"
 	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 	"github.com/protolambda/zrnt/eth2/beacon/sharding"
 )
@@ -89,8 +90,8 @@ func Blockv2(backend *BeaconBackend) eth2api.Route {
 				version = "phase0"
 			case *altair.SignedBeaconBlock:
 				version = "altair"
-			case *merge.SignedBeaconBlock:
-				version = "merge"
+			case *bellatrix.SignedBeaconBlock:
+				version = "bellatrix"
 			case *sharding.SignedBeaconBlock:
 				version = "sharding"
 			default:
