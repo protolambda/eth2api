@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/protolambda/zrnt/eth2/beacon"
 	"github.com/protolambda/zrnt/eth2/beacon/altair"
+	"github.com/protolambda/zrnt/eth2/beacon/bellatrix"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
-	"github.com/protolambda/zrnt/eth2/beacon/merge"
 	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 	"github.com/protolambda/zrnt/eth2/beacon/sharding"
 	"github.com/protolambda/ztyp/codec"
@@ -193,7 +193,7 @@ type blockDataStruct struct {
 type VersionedBeaconBlock struct {
 	Version string `json:"version"`
 	// Data is *phase0.BeaconBlock, *altair.BeaconBlock,
-	// *merge.BeaconBlock or *sharding.BeaconBlock.
+	// *bellatrix.BeaconBlock or *sharding.BeaconBlock.
 	Data common.SpecObj `json:"data"`
 }
 
@@ -208,8 +208,8 @@ func (v *VersionedBeaconBlock) UnmarshalJSON(b []byte) error {
 		data.Data = new(phase0.BeaconBlock)
 	case "altair":
 		data.Data = new(altair.BeaconBlock)
-	case "merge":
-		data.Data = new(merge.BeaconBlock)
+	case "bellatrix":
+		data.Data = new(bellatrix.BeaconBlock)
 	case "sharding":
 		data.Data = new(sharding.BeaconBlock)
 	default:
@@ -234,7 +234,7 @@ type signedBlockDataStruct struct {
 type VersionedSignedBeaconBlock struct {
 	Version string `json:"version"`
 	// Data is *phase0.SignedBeaconBlock, *altair.SignedBeaconBlock,
-	// *merge.SignedBeaconBlock or *sharding.SignedBeaconBlock.
+	// *bellatrix.SignedBeaconBlock or *sharding.SignedBeaconBlock.
 	Data SignedBeaconBlock `json:"data"`
 }
 
@@ -249,8 +249,8 @@ func (v *VersionedSignedBeaconBlock) UnmarshalJSON(b []byte) error {
 		data.Data = new(phase0.SignedBeaconBlock)
 	case "altair":
 		data.Data = new(altair.SignedBeaconBlock)
-	case "merge":
-		data.Data = new(merge.SignedBeaconBlock)
+	case "bellatrix":
+		data.Data = new(bellatrix.SignedBeaconBlock)
 	case "sharding":
 		data.Data = new(sharding.SignedBeaconBlock)
 	default:
@@ -270,7 +270,7 @@ type stateDataStruct struct {
 
 type VersionedBeaconState struct {
 	Version string `json:"version"`
-	// Data is *phase0.BeaconState, *altair.BeaconState, *merge.BeaconState or *sharding.BeaconState.
+	// Data is *phase0.BeaconState, *altair.BeaconState, *bellatrix.BeaconState or *sharding.BeaconState.
 	// See the Tree(spec) method to transform into a binary-tree backed state for advanced processing.
 	Data common.SpecObj `json:"data"`
 }
@@ -291,8 +291,8 @@ func (v *VersionedBeaconState) Tree(spec *common.Spec) (common.BeaconState, erro
 		return phase0.AsBeaconStateView(phase0.BeaconStateType(spec).Deserialize(r))
 	case "altair":
 		return altair.AsBeaconStateView(altair.BeaconStateType(spec).Deserialize(r))
-	case "merge":
-		return merge.AsBeaconStateView(merge.BeaconStateType(spec).Deserialize(r))
+	case "bellatrix":
+		return bellatrix.AsBeaconStateView(bellatrix.BeaconStateType(spec).Deserialize(r))
 	case "sharding":
 		return sharding.AsBeaconStateView(sharding.BeaconStateType(spec).Deserialize(r))
 	default:
@@ -311,8 +311,8 @@ func (v *VersionedBeaconState) UnmarshalJSON(b []byte) error {
 		data.Data = new(phase0.BeaconState)
 	case "altair":
 		data.Data = new(altair.BeaconState)
-	case "merge":
-		data.Data = new(merge.BeaconState)
+	case "bellatrix":
+		data.Data = new(bellatrix.BeaconState)
 	case "sharding":
 		data.Data = new(sharding.BeaconState)
 	default:
