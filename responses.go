@@ -11,67 +11,100 @@ type PreparedResponse interface {
 	Headers() Headers
 }
 
-func RespondBadInputData(data interface{}) PreparedResponse {
-	// TODO
-	return nil
+type BasicResponse struct {
+	code    uint
+	body    any
+	headers Headers
+}
+
+func (b *BasicResponse) Code() uint {
+	return b.code
+}
+
+func (b *BasicResponse) Body() interface{} {
+	return b.body
+}
+
+func (b *BasicResponse) Headers() Headers {
+	return b.headers
+}
+
+var _ PreparedResponse = (*BasicResponse)(nil)
+
+func RespondBadInputs(msg string, failures []IndexedErrorMessageItem) PreparedResponse {
+	return &BasicResponse{
+		code: 400,
+		body: &ErrorMessage{
+			CodeValue: 400,
+			Message:   msg,
+			Failures:  failures,
+		},
+		headers: nil,
+	}
 }
 
 func RespondBadInput(err error) PreparedResponse {
-	// TODO
-	return nil
+	return &BasicResponse{
+		code: 400,
+		body: ErrorMessage{CodeValue: 400, Message: err.Error()},
+	}
 }
 
 func RespondNotFound(msg string) PreparedResponse {
-	// TODO
-	return nil
+	return &BasicResponse{
+		code: 404,
+		body: &ErrorMessage{
+			CodeValue: 404,
+			Message:   msg,
+		},
+	}
 }
 
-func RespondAccepted(msg string) PreparedResponse {
-	return nil
+func RespondAccepted(err error) PreparedResponse {
+	return &BasicResponse{
+		code: 202,
+		body: ErrorMessage{CodeValue: 202, Message: err.Error()},
+	}
 }
 
-func RespondOK(data interface{}) PreparedResponse {
-	// TODO
-	return nil
+func RespondOK(body interface{}) PreparedResponse {
+	return &BasicResponse{
+		code: 200,
+		body: body,
+	}
 }
 
 func RespondOKMsg(msg string) PreparedResponse {
-	// TODO
-	return nil
+	return &BasicResponse{
+		code: 200,
+		body: &ErrorMessage{
+			CodeValue: 200,
+			Message:   msg,
+		},
+	}
 }
 
 func RespondInternalError(err error) PreparedResponse {
-	// TODO
-	return nil
+	return &BasicResponse{
+		code: 500,
+		body: &ErrorMessage{
+			CodeValue: 500,
+			Message:   err.Error(),
+		},
+	}
 }
 
 func RespondSyncing(msg string) PreparedResponse {
-	// TODO
-	return nil
+	return &BasicResponse{
+		code: 503,
+		body: &ErrorMessage{
+			CodeValue: 503,
+			Message:   msg,
+		},
+	}
 }
 
 type ApiError interface {
 	error
 	Code() uint
-}
-
-// ErrorResponse is a base struct with common error contents for responses.
-type ErrorResponse struct {
-	// The response solely consists of a ErrorMessage
-	ErrorMessage
-}
-
-// Invalid request syntax.
-type InvalidRequest struct {
-	ErrorResponse
-}
-
-// Beacon node internal error.
-type InternalError struct {
-	ErrorResponse
-}
-
-// Beacon node is currently syncing, try again later.
-type CurrentlySyncing struct {
-	ErrorResponse
 }

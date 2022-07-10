@@ -17,27 +17,16 @@ func (JSONCodec) DecodeResponseBody(code uint, r io.ReadCloser, dest interface{}
 	defer r.Close()
 	if code < 200 {
 		return fmt.Errorf("unexpected response status code: %d", code)
-	} else if code < 300 {
+	} else if code == 200 {
 		dec := json.NewDecoder(r)
 		return dec.Decode(dest)
 	} else {
-		// TODO: handle indexed errors
-
-		var ierr ErrorResponse
+		var errMsg ErrorMessage
 		dec := json.NewDecoder(r)
-		if err := dec.Decode(&ierr); err != nil {
+		if err := dec.Decode(&errMsg); err != nil {
 			return ClientApiErr{fmt.Errorf("failed to decode error response with status code: %d", code)}
 		}
-		if code < 500 {
-			return &InvalidRequest{ierr}
-		}
-		if code == 503 {
-			return &CurrentlySyncing{ierr}
-		}
-		if code < 600 {
-			return &InternalError{ierr}
-		}
-		return &ierr
+		return &errMsg
 	}
 }
 

@@ -9,7 +9,6 @@ import (
 	"github.com/protolambda/zrnt/eth2/beacon/bellatrix"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
 	"github.com/protolambda/zrnt/eth2/beacon/phase0"
-	"github.com/protolambda/zrnt/eth2/beacon/sharding"
 	"github.com/protolambda/ztyp/codec"
 	"github.com/protolambda/ztyp/view"
 	"strings"
@@ -210,8 +209,6 @@ func (v *VersionedBeaconBlock) UnmarshalJSON(b []byte) error {
 		data.Data = new(altair.BeaconBlock)
 	case "bellatrix":
 		data.Data = new(bellatrix.BeaconBlock)
-	case "sharding":
-		data.Data = new(sharding.BeaconBlock)
 	default:
 		return fmt.Errorf("unrecognized version: %q", version.Version)
 	}
@@ -251,8 +248,6 @@ func (v *VersionedSignedBeaconBlock) UnmarshalJSON(b []byte) error {
 		data.Data = new(altair.SignedBeaconBlock)
 	case "bellatrix":
 		data.Data = new(bellatrix.SignedBeaconBlock)
-	case "sharding":
-		data.Data = new(sharding.SignedBeaconBlock)
 	default:
 		return fmt.Errorf("unrecognized version: %q", version.Version)
 	}
@@ -293,8 +288,6 @@ func (v *VersionedBeaconState) Tree(spec *common.Spec) (common.BeaconState, erro
 		return altair.AsBeaconStateView(altair.BeaconStateType(spec).Deserialize(r))
 	case "bellatrix":
 		return bellatrix.AsBeaconStateView(bellatrix.BeaconStateType(spec).Deserialize(r))
-	case "sharding":
-		return sharding.AsBeaconStateView(sharding.BeaconStateType(spec).Deserialize(r))
 	default:
 		return nil, fmt.Errorf("unrecognized version: %q", v.Version)
 	}
@@ -313,8 +306,6 @@ func (v *VersionedBeaconState) UnmarshalJSON(b []byte) error {
 		data.Data = new(altair.BeaconState)
 	case "bellatrix":
 		data.Data = new(bellatrix.BeaconState)
-	case "sharding":
-		data.Data = new(sharding.BeaconState)
 	default:
 		return fmt.Errorf("unrecognized version: %q", version.Version)
 	}
@@ -380,27 +371,6 @@ const (
 // Further (optional) processing in Go with: https://github.com/libp2p/go-libp2p-core/blob/a39b84ea2e340466d57fdb342c7d62f12957d972/peer/peer.go#L42
 type ApiPeerId string
 
-type ErrorMessage struct {
-	// Either specific error code in case of invalid request or http status code
-	CodeValue uint `json:"code"`
-	// Message describing error
-	Message string `json:"message"`
-	// Optional stacktraces, sent when node is in debug mode
-	Stacktraces []string `json:"stacktraces"`
-}
-
-func (err *ErrorMessage) Code() uint {
-	return err.CodeValue
-}
-
-func (err *ErrorMessage) Error() string {
-	stack := ""
-	if len(err.Stacktraces) > 0 {
-		stack = "\n" + strings.Join(err.Stacktraces, "\n")
-	}
-	return fmt.Sprintf("Error(%d): %s", err.CodeValue, err.Message+stack)
-}
-
 type IndexedErrorMessageItem struct {
 	// Index of item in the request list that caused the error
 	Index uint `json:"index"`
@@ -408,16 +378,36 @@ type IndexedErrorMessageItem struct {
 	Message string `json:"message"`
 }
 
-type IndexedErrorMessage struct {
+type ErrorMessage struct {
 	// Either specific error code in case of invalid request or http status code
-	Code uint `json:"code"`
+	CodeValue uint `json:"code"`
 	// Message describing error
 	Message string `json:"message"`
-	// List of individual items that have failed
-	Failures []IndexedErrorMessageItem `json:"failures"`
+	// Optional stacktraces, sent when node is in debug mode
+	Stacktraces []string `json:"stacktraces,omitempty"`
+	// Optional list of individual items that have failed
+	Failures []IndexedErrorMessageItem `json:"failures,omitempty"`
 }
 
-func (m *IndexedErrorMessage) IndexedErrors() []IndexedErrorMessageItem {
+func (err *ErrorMessage) Code() uint {
+	return err.CodeValue
+}
+
+func (err *ErrorMessage) Error() string {
+	out := fmt.Sprintf("Error(%d): %s", err.CodeValue, err.Message)
+	if len(err.Failures) > 0 {
+		out += fmt.Sprintf("\n%d failures:\n", len(err.Failures))
+		for i, item := range err.Failures {
+			out += fmt.Sprintf("failure %d item %d error: %s\n", i, item.Index, item.Message)
+		}
+	}
+	if len(err.Stacktraces) > 0 {
+		out += "\n" + strings.Join(err.Stacktraces, "\n")
+	}
+	return out
+}
+
+func (m *ErrorMessage) IndexedErrors() []IndexedErrorMessageItem {
 	return m.Failures
 }
 

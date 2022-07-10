@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/protolambda/eth2api"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
-	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 	"strconv"
 )
 
@@ -21,7 +20,11 @@ func BlockHeader(backend *BeaconBackend) eth2api.Route {
 			if !ok {
 				return eth2api.RespondNotFound("Block not found")
 			}
-			blockEnvelop, err := backend.BlockDB.Get(ctx, entry.BlockRoot())
+			blockRoot, err := entry.BlockRoot()
+			if err != nil {
+				return eth2api.RespondInternalError(fmt.Errorf("failed to get block root: %v", err))
+			}
+			blockEnvelop, err := backend.BlockDB.Get(entry.Step().Slot(), blockRoot)
 			if err != nil {
 				return eth2api.RespondInternalError(fmt.Errorf("failed to load block: %v", err))
 			}
@@ -32,16 +35,17 @@ func BlockHeader(backend *BeaconBackend) eth2api.Route {
 			if !ok {
 				return eth2api.RespondInternalError(fmt.Errorf("failed to determine if entry is canonical"))
 			}
-			// TODO: support alternative forks
-			block, ok := blockEnvelop.SignedBlock.(*phase0.SignedBeaconBlock)
-			if !ok {
-				return eth2api.RespondInternalError(fmt.Errorf("only supporting phase0 block headers currently"))
+			canonBlockRoot, err := canon.BlockRoot()
+			if err != nil {
+				return eth2api.RespondInternalError(fmt.Errorf("failed to get canon block root: %v", err))
 			}
-			header := block.SignedHeader(backend.Spec)
 			out := eth2api.BeaconBlockHeaderAndInfo{
-				Root:      entry.BlockRoot(),
-				Canonical: canon.BlockRoot() == entry.BlockRoot(),
-				Header:    *header,
+				Root:      blockRoot,
+				Canonical: canonBlockRoot == blockRoot,
+				Header: common.SignedBeaconBlockHeader{
+					Message:   blockEnvelop.BeaconBlockHeader,
+					Signature: blockEnvelop.Signature,
+				},
 			}
 			return eth2api.RespondOK(eth2api.Wrap(&out))
 		})
@@ -76,21 +80,24 @@ func BlockHeaders(backend *BeaconBackend) eth2api.Route {
 			}
 			data := make([]eth2api.BeaconBlockHeaderAndInfo, 0, len(results))
 			for _, res := range results {
-				blockEnvelop, err := backend.BlockDB.Get(ctx, res.BlockRoot())
+				blockRoot, err := res.BlockRoot()
+				if err != nil {
+					return eth2api.RespondInternalError(fmt.Errorf("failed to load block root: %v", err))
+				}
+				blockEnvelop, err := backend.BlockDB.Get(res.Step().Slot(), blockRoot)
 				if err != nil {
 					return eth2api.RespondInternalError(fmt.Errorf("failed to load block: %v", err))
 				}
 				if blockEnvelop == nil {
 					return eth2api.RespondNotFound("Block not found")
 				}
-				block, ok := blockEnvelop.SignedBlock.(*phase0.SignedBeaconBlock)
-				if !ok {
-					return eth2api.RespondInternalError(fmt.Errorf("only supporting phase0 block headers currently"))
-				}
 				data = append(data, eth2api.BeaconBlockHeaderAndInfo{
-					Root:      res.BlockRoot(),
+					Root:      blockRoot,
 					Canonical: res.Canonical,
-					Header:    *block.SignedHeader(backend.Spec),
+					Header: common.SignedBeaconBlockHeader{
+						Message:   blockEnvelop.BeaconBlockHeader,
+						Signature: blockEnvelop.Signature,
+					},
 				})
 			}
 			return eth2api.RespondOK(eth2api.Wrap(data))

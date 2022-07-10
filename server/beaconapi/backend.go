@@ -4,44 +4,75 @@ import (
 	"context"
 	"github.com/protolambda/eth2api"
 	"github.com/protolambda/zrnt/eth2/beacon"
+	"github.com/protolambda/zrnt/eth2/beacon/altair"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
 	"github.com/protolambda/zrnt/eth2/beacon/phase0"
-	chain2 "github.com/protolambda/zrnt/eth2/chain"
-	"github.com/protolambda/zrnt/eth2/db/blocks"
 	"github.com/protolambda/zrnt/eth2/pool"
 )
 
 type Publisher interface {
 	PublishBlock(ctx context.Context, block *common.BeaconBlockEnvelope) (syncing bool, err error)
 	PublishAttestation(ctx context.Context, att *phase0.Attestation) (err error)
-	PublishAttesterSlashing(ctx context.Context, att *phase0.AttesterSlashing) (err error)
-	PublishProposerSlashing(ctx context.Context, att *phase0.ProposerSlashing) (err error)
-	PublishVoluntaryExits(ctx context.Context, att *phase0.SignedVoluntaryExit) (err error)
+	PublishAttesterSlashing(ctx context.Context, sl *phase0.AttesterSlashing) (err error)
+	PublishProposerSlashing(ctx context.Context, sl *phase0.ProposerSlashing) (err error)
+	PublishVoluntaryExit(ctx context.Context, exit *phase0.SignedVoluntaryExit) (err error)
+	PublishSyncCommitteeMessage(ctx context.Context, msg *altair.SyncCommitteeMessage) error
+}
+
+type BlockReader interface {
+	Get(slot common.Slot, root common.Root) (*common.BeaconBlockEnvelope, error)
+}
+
+type AttestationPool interface {
+	Search(opts ...pool.AttSearchOption) (out []*phase0.Attestation)
+	AddAttestation(ctx context.Context, att *phase0.Attestation, committee common.CommitteeIndices) error
+}
+
+type AttesterSlashingPool interface {
+	All() []*phase0.AttesterSlashing
+	AddAttesterSlashing(ctx context.Context, sl *phase0.AttesterSlashing) error
+}
+
+type ProposerSlashingPool interface {
+	All() []*phase0.ProposerSlashing
+	AddProposerSlashing(ctx context.Context, sl *phase0.ProposerSlashing) error
+}
+
+type VoluntaryExitPool interface {
+	All() []*phase0.SignedVoluntaryExit
+	AddVoluntaryExit(ctx context.Context, exit *phase0.SignedVoluntaryExit) error
+}
+
+type SyncCommitteePool interface {
+	AddSyncCommitteeMessage(ctx context.Context, msg *altair.SyncCommitteeMessage) error
 }
 
 type BeaconBackend struct {
 	Spec      *common.Spec
-	Chain     chain2.FullChain
-	BlockDB   blocks.DB
+	Chain     beacon.Chain
+	BlockDB   BlockReader
 	Publisher Publisher
 
+	ProcessBlock func(ctx context.Context, block *common.BeaconBlockEnvelope) error
+
 	ForkDecoder *beacon.ForkDecoder
-	// TODO move pools to interface
-	AttestationPool      *pool.AttestationPool
-	AttesterSlashingPool *pool.AttesterSlashingPool
-	ProposerSlashingPool *pool.ProposerSlashingPool
-	VoluntaryExitPool    *pool.VoluntaryExitPool
+
+	AttestationPool      AttestationPool
+	AttesterSlashingPool AttesterSlashingPool
+	ProposerSlashingPool ProposerSlashingPool
+	VoluntaryExitPool    VoluntaryExitPool
+	SyncCommitteePool    SyncCommitteePool
 }
 
-func (backend *BeaconBackend) BlockLookup(blockId eth2api.BlockId) (entry chain2.ChainEntry, ok bool) {
+func (backend *BeaconBackend) BlockLookup(blockId eth2api.BlockId) (entry beacon.ChainEntry, ok bool) {
 	switch id := blockId.(type) {
 	case eth2api.BlockIdRoot:
 		return backend.Chain.ByBlock(common.Root(id))
 	case eth2api.BlockIdSlot:
 		// prefer a slot entry that includes the block.
-		entry, ok = backend.Chain.ByCanonStep(chain2.AsStep(common.Slot(id), true))
+		entry, ok = backend.Chain.ByCanonStep(common.AsStep(common.Slot(id), true))
 		if !ok {
-			entry, ok = backend.Chain.ByCanonStep(chain2.AsStep(common.Slot(id), false))
+			entry, ok = backend.Chain.ByCanonStep(common.AsStep(common.Slot(id), false))
 		}
 		return
 	case eth2api.BlockIdStrMode:
@@ -53,7 +84,7 @@ func (backend *BeaconBackend) BlockLookup(blockId eth2api.BlockId) (entry chain2
 			entry, err := backend.Chain.Finalized()
 			return entry, err == nil
 		case eth2api.BlockGenesis:
-			return backend.Chain.ByCanonStep(chain2.AsStep(common.Slot(0), true))
+			return backend.Chain.ByCanonStep(common.AsStep(common.Slot(0), true))
 		default:
 			return nil, false
 		}
