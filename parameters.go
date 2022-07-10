@@ -1,9 +1,10 @@
 package eth2api
 
 import (
-	"github.com/protolambda/zrnt/eth2/beacon/common"
 	"strconv"
 	"strings"
+
+	"github.com/protolambda/zrnt/eth2/beacon/common"
 )
 
 type ValidatorId interface {

@@ -3,9 +3,10 @@ package beaconapi
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/protolambda/eth2api"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
-	"strconv"
 )
 
 // Serve block header for given block id.

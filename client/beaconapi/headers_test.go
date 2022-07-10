@@ -2,9 +2,10 @@ package beaconapi
 
 import (
 	"context"
+	"testing"
+
 	"github.com/protolambda/eth2api"
 	"github.com/protolambda/eth2api/shared_test"
-	"testing"
 )
 
 func TestBlockHeader(t *testing.T) {

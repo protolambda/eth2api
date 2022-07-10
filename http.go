@@ -87,7 +87,8 @@ func (resp *HttpResponse) Decode(dest interface{}) (code uint, err error) {
 
 type HttpRouter struct {
 	httprouter.Router
-	Codec Codec
+	Codec         Codec
+	OnEncodingErr func(error)
 }
 
 func NewHttpRouter() *HttpRouter {
@@ -105,8 +106,8 @@ func NewHttpRouter() *HttpRouter {
 
 var _ http.Handler = (*HttpRouter)(nil)
 
-func (r *HttpRouter) ServeHTTP(http.ResponseWriter, *http.Request) {
-	// TODO: use the constructed router
+func (r *HttpRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	r.Router.ServeHTTP(w, req)
 }
 
 type httpRequest struct {
@@ -143,8 +144,8 @@ func (r *HttpRouter) AddRoute(route Route) {
 				h.Add(k, v)
 			}
 			respw.WriteHeader(int(resp.Code()))
-			if err := r.Codec.EncodeResponseBody(respw, resp.Body()); err != nil {
-				// TODO
+			if err := r.Codec.EncodeResponseBody(respw, resp.Body()); err != nil && r.OnEncodingErr != nil {
+				r.OnEncodingErr(err)
 			}
 		},
 	)

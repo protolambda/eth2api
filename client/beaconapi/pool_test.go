@@ -2,10 +2,11 @@ package beaconapi
 
 import (
 	"context"
+	"testing"
+
 	"github.com/protolambda/eth2api"
 	"github.com/protolambda/eth2api/shared_test"
 	"github.com/protolambda/zrnt/eth2/beacon/phase0"
-	"testing"
 )
 
 func TestPoolAttestations(t *testing.T) {

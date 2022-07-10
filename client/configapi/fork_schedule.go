@@ -2,6 +2,7 @@ package configapi
 
 import (
 	"context"
+
 	"github.com/protolambda/eth2api"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
 )

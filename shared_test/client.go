@@ -7,15 +7,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/protolambda/eth2api"
-	"github.com/protolambda/zrnt/eth2/beacon/common"
-	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
 	"strings"
 	"testing"
+
+	"github.com/protolambda/eth2api"
+	"github.com/protolambda/zrnt/eth2/beacon/common"
+	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 )
 
 // All possible API method inputs (params and post-body inputs).
@@ -73,7 +74,7 @@ func (input *Input) ValidatorIds() []eth2api.ValidatorId {
 		return nil
 	}
 	ids := input.ValueValidatorIds
-	out := make([]eth2api.ValidatorId, len(ids), len(ids))
+	out := make([]eth2api.ValidatorId, len(ids))
 	var err error
 	for i, id := range ids {
 		out[i], err = eth2api.ParseValidatorId(id)

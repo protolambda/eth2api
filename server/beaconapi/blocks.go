@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/protolambda/eth2api"
 	"github.com/protolambda/zrnt/eth2/beacon"
 	"github.com/protolambda/zrnt/eth2/beacon/altair"
@@ -93,7 +94,9 @@ func Blockv2(backend *BeaconBackend) eth2api.Route {
 				return eth2api.RespondNotFound("Block not found")
 			}
 			blockRoot, err := entry.BlockRoot()
-
+			if err != nil {
+				return eth2api.RespondInternalError(fmt.Errorf("failed to load block root: %v", err))
+			}
 			blockEnv, err := backend.BlockDB.Get(entry.Step().Slot(), blockRoot)
 			if err != nil {
 				return eth2api.RespondInternalError(fmt.Errorf("failed to load block: %v", err))
@@ -133,7 +136,7 @@ type slotHack struct {
 
 func (h *slotHack) UnmarshalJSON(b []byte) error {
 	var slotData slotDecodeLookahead
-	if err := json.Unmarshal(b, slotData); err != nil {
+	if err := json.Unmarshal(b, &slotData); err != nil {
 		return err
 	}
 

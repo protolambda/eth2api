@@ -3,12 +3,13 @@ package beaconapi
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/protolambda/eth2api"
 	"github.com/protolambda/zrnt/eth2/beacon/altair"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
 	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 	"github.com/protolambda/zrnt/eth2/pool"
-	"strconv"
 )
 
 // Serves attestations known by the node but not necessarily incorporated into any block

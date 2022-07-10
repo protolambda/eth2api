@@ -2,6 +2,7 @@ package debugapi
 
 import (
 	"context"
+
 	"github.com/protolambda/eth2api"
 )
 
