@@ -95,10 +95,12 @@ func BodyPOST(path string, body interface{}) PreparedRequest {
 
 func SimpleRequest(ctx context.Context, cli Client, req PreparedRequest, dest interface{}) (exists bool, err error) {
 	resp := cli.Request(ctx, req)
-	var code uint
-	code, err = resp.Decode(dest)
-	exists = code != 404
-	return
+	code, err := resp.Decode(dest)
+	if code == 404 {
+		return false, nil
+	} else {
+		return true, err
+	}
 }
 
 func MinimalRequest(ctx context.Context, cli Client, req PreparedRequest, dest interface{}) (err error) {
