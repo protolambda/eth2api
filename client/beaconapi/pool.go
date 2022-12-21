@@ -82,3 +82,8 @@ func SubmitVoluntaryExit(ctx context.Context, cli eth2api.Client, exit *phase0.S
 func SubmitSyncCommitteeMessages(ctx context.Context, cli eth2api.Client, messages []altair.SyncCommitteeMessage) error {
 	return eth2api.MinimalRequest(ctx, cli, eth2api.BodyPOST("/eth/v1/beacon/pool/sync_committees", messages), nil)
 }
+
+// Submits SignedBLSToExecutionChanges object to node's pool and if passes validation node MUST broadcast it to network.
+func SubmitBLSToExecutionChanges(ctx context.Context, cli eth2api.Client, changes common.SignedBLSToExecutionChanges) error {
+	return eth2api.MinimalRequest(ctx, cli, eth2api.BodyPOST("/eth/v1/beacon/pool/bls_to_execution_changes", changes), nil)
+}
