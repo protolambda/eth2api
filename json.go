@@ -18,6 +18,9 @@ func (JSONCodec) DecodeResponseBody(code uint, r io.ReadCloser, dest interface{}
 	if code < 200 {
 		return fmt.Errorf("unexpected response status code: %d", code)
 	} else if code == 200 {
+		if dest == nil {
+			return nil
+		}
 		dec := json.NewDecoder(r)
 		return dec.Decode(dest)
 	} else {
