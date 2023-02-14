@@ -43,3 +43,9 @@ func (JSONCodec) DecodeRequestBody(r io.ReadCloser, dst interface{}) error {
 	dec := json.NewDecoder(r)
 	return dec.Decode(dst)
 }
+
+func (JSONCodec) ContentType() []string {
+	return []string{
+		"application/json",
+	}
+}
