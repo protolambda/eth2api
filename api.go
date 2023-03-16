@@ -9,6 +9,7 @@ type Codec interface {
 	DecodeResponseBody(code uint, r io.ReadCloser, dest interface{}) error
 	EncodeRequestBody(w io.Writer, body interface{}) error
 	DecodeRequestBody(r io.ReadCloser, dst interface{}) error
+	ContentType() []string
 }
 
 type ReqMethod string

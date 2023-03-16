@@ -49,6 +49,9 @@ func (cli *Eth2HttpClient) Request(ctx context.Context, req PreparedRequest) Res
 		if err != nil {
 			return ClientErr{fmt.Errorf("failed to build GET request: %w", err)}
 		}
+		req.Header = map[string][]string{
+			"Content-Type": cli.Codec.ContentType(),
+		}
 		resp, err := cli.Cli.Do(req)
 		if err != nil {
 			return ClientErr{fmt.Errorf("failed to execute GET request: %w", err)}
@@ -62,6 +65,9 @@ func (cli *Eth2HttpClient) Request(ctx context.Context, req PreparedRequest) Res
 		req, err := http.NewRequestWithContext(ctx, "POST", path, &buf)
 		if err != nil {
 			return ClientErr{fmt.Errorf("failed to build POST request: %w", err)}
+		}
+		req.Header = map[string][]string{
+			"Content-Type": cli.Codec.ContentType(),
 		}
 		resp, err := cli.Cli.Do(req)
 		if err != nil {

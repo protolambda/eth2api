@@ -9,6 +9,7 @@ import (
 	"github.com/protolambda/zrnt/eth2/beacon"
 	"github.com/protolambda/zrnt/eth2/beacon/altair"
 	"github.com/protolambda/zrnt/eth2/beacon/bellatrix"
+	"github.com/protolambda/zrnt/eth2/beacon/capella"
 	"github.com/protolambda/zrnt/eth2/beacon/common"
 	"github.com/protolambda/zrnt/eth2/beacon/phase0"
 )
@@ -116,6 +117,8 @@ func Blockv2(backend *BeaconBackend) eth2api.Route {
 				version = "altair"
 			case *bellatrix.SignedBeaconBlock:
 				version = "bellatrix"
+			case *capella.SignedBeaconBlock:
+				version = "capella"
 			default:
 				return eth2api.RespondInternalError(fmt.Errorf("unknown block type %T", data))
 			}
